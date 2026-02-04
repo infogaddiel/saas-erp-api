@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { User } from '../models';
 
 export const hashPassword = async (password: string): Promise<string> => {
@@ -29,9 +30,18 @@ export const loginUser = async (mobile: string, password: string) => {
       return { success: false, message: 'Invalid password' };
     }
 
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET is not set');
+      return { success: false, message: 'Server configuration error' };
+    }
+
+    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1d' });
+
     return {
       success: true,
       message: 'Login successful',
+      token,
       user: {
         id: user.id,
         name: user.name,

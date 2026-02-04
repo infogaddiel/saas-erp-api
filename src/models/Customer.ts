@@ -1,22 +1,20 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
-import Company from './Company';
 
-class User extends Model {
+class Customer extends Model {
   public id!: number;
   public name!: string;
+  public mobile!: string | null;
   public email!: string | null;
-  public profile_image!: string | null;
-  public mobile!: string;
-  public password!: string;
-  public company_id!: number | null;
-  public role_id!: number | null;
-  public blocked!: boolean;
+  public address!: string | null;
+  public type!: 'Individual' | 'Company';
+  public status!: boolean;
+  public created_by!: number | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
-} 
+}
 
-User.init(
+Customer.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -27,44 +25,34 @@ User.init(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    mobile: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
     email: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      unique: true,
     },
-    profile_image: {
-      type: DataTypes.STRING(255),
+    address: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
-    mobile: {
-      type: DataTypes.STRING(15),
-      allowNull: false,
-      unique: true,
-    },
-    password: {
-      type: DataTypes.STRING(255),
+    type: {
+      type: DataTypes.ENUM('Individual', 'Company'),
       allowNull: false,
     },
-    company_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: Company,
-        key: 'id',
-      },
-    },
-    role_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'roles',
-        key: 'id',
-      },
-    },
-    blocked: {
+    status: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false,
+      defaultValue: true,
+    },
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
     },
     created_at: {
       type: DataTypes.DATE,
@@ -79,11 +67,9 @@ User.init(
   },
   {
     sequelize,
-    tableName: 'users',
+    tableName: 'customers',
     timestamps: false,
   }
 );
 
-export default User;
-
-
+export default Customer;
