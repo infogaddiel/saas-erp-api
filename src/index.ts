@@ -16,17 +16,9 @@ const PORT = process.env.PORT || 5000;
 const corsOptions = {
   origin: [
     'http://localhost:3000',  // React default
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:4000',  // Vue default
-    'http://localhost:4001',
-    'http://localhost:4002',
-    'http://localhost:8080',  // Vue CLI default
-    'http://localhost:8081',
-    'http://localhost:8082',
-    'http://127.0.0.1:3000', // Alternative localhost
-    'http://127.0.0.1:4000',
-    'http://127.0.0.1:8080',
+    'http://localhost:8100',  // React default
+    'capacitor://localhost', 
+    'http://localhost'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
