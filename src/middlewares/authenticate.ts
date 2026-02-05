@@ -8,7 +8,7 @@ const authenticate: RequestHandler = async (req, res, next) => {
     if (!authHeader || typeof authHeader !== 'string') {
       return res.status(401).json({ success: false, message: 'Authorization header missing' });
     }
-
+console.log('Auth Header:', authHeader);
     const parts = authHeader.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       return res.status(401).json({ success: false, message: 'Invalid authorization format' });

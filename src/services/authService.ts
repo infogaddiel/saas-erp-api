@@ -11,6 +11,35 @@ export const verifyPassword = async (password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 };
 
+export const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+export const verifyOTP = async (userId: number, otp: string) => {
+  try {
+    const user = await User.findOne({
+      where: { id: userId },
+      attributes: ['id', 'mobile_otp'],
+    });
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    if (user.mobile_otp !== otp) {
+      return { success: false, message: 'Invalid OTP' };
+    }
+
+    // Clear OTP after verification
+    await User.update({ mobile_otp: null }, { where: { id: userId } });
+
+    return { success: true, message: 'OTP verified successfully' };
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    return { success: false, message: 'An error occurred during OTP verification' };
+  }
+};
+
 export const loginUser = async (mobile: string, password: string) => {
   try {
     // Find user by mobile number using Sequelize
@@ -30,6 +59,12 @@ export const loginUser = async (mobile: string, password: string) => {
       return { success: false, message: 'Invalid password' };
     }
 
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Update user with OTP
+    await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+
     const secret = process.env.JWT_SECRET;
     if (!secret) {
       console.error('JWT_SECRET is not set');
@@ -42,6 +77,7 @@ export const loginUser = async (mobile: string, password: string) => {
       success: true,
       message: 'Login successful',
       token,
+      otp,
       user: {
         id: user.id,
         name: user.name,

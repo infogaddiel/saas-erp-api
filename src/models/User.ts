@@ -12,6 +12,7 @@ class User extends Model {
   public company_id!: number | null;
   public role_id!: number | null;
   public blocked!: boolean;
+  public mobile_otp!: string | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 } 
@@ -65,6 +66,10 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    mobile_otp: {
+      type: DataTypes.STRING(6),
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
