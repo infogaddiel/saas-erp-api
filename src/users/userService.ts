@@ -1,5 +1,5 @@
 import { User, Company, Role } from '../models';
-import { hashPassword } from './authService';
+import { hashPassword } from '../auth/authService';
 
 interface CreateUserInput {
   name: string;
@@ -55,7 +55,22 @@ export const getUsers = async (page = 1, limit = 20) => {
       attributes: { exclude: ['password'] },
     });
 
-    return { success: true, data: { total: count, users: rows } };
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      success: true,
+      data: {
+        users: rows,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+    };
   } catch (error) {
     console.error('getUsers error:', error);
     return { success: false, message: 'Error fetching users' };

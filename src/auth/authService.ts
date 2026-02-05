@@ -33,18 +33,26 @@ export const verifyOTP = async (userId: number, otp: string) => {
     // Clear OTP after verification
     await User.update({ mobile_otp: null }, { where: { id: userId } });
 
-    return { success: true, message: 'OTP verified successfully' };
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET is not set');
+      return { success: false, message: 'Server configuration error' };
+    }
+
+    const token = jwt.sign({ id: userId }, secret, { expiresIn: '1d' });
+
+    return { success: true, message: 'OTP verified successfully', token };
   } catch (error) {
     console.error('OTP verification error:', error);
     return { success: false, message: 'An error occurred during OTP verification' };
   }
 };
 
-export const loginUser = async (mobile: string, password: string) => {
+export const loginUser = async (email: string, password: string) => {
   try {
     // Find user by mobile number using Sequelize
     const user = await User.findOne({
-      where: { mobile },
+      where: { email },
       attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id'],
     });
 
@@ -65,18 +73,9 @@ export const loginUser = async (mobile: string, password: string) => {
     // Update user with OTP
     await User.update({ mobile_otp: otp }, { where: { id: user.id } });
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error('JWT_SECRET is not set');
-      return { success: false, message: 'Server configuration error' };
-    }
-
-    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1d' });
-
     return {
       success: true,
       message: 'Login successful',
-      token,
       otp,
       user: {
         id: user.id,

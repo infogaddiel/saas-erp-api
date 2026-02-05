@@ -1,19 +1,14 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import {
   createUser,
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
-} from '../services/userService';
-import validateRequest from '../middlewares/validateRequest';
-import { createUserSchema, updateUserSchema, listUsersSchema, idParamSchema } from '../validators/userValidator';
+} from './userService';
 
-const router = Router();
-
-router.post('/', validateRequest(createUserSchema, 'body'), async (req: Request, res: Response) => {
+export const create = async (req: Request, res: Response) => {
   try {
-    console.log('Create user request body:', req.body);
     const { name, mobile, email, password, company_id, role_id, blocked } = req.body;
 
     const result = await createUser({ name, mobile, email, password, company_id, role_id, blocked });
@@ -21,12 +16,12 @@ router.post('/', validateRequest(createUserSchema, 'body'), async (req: Request,
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error('Create user route error:', error);
+    console.error('Create user controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.get('/', validateRequest(listUsersSchema, 'query'), async (req: Request, res: Response) => {
+export const list = async (req: Request, res: Response) => {
   try {
     const page = parseInt((req.query.page as string) || '1', 10);
     const limit = parseInt((req.query.limit as string) || '20', 10);
@@ -36,12 +31,12 @@ router.get('/', validateRequest(listUsersSchema, 'query'), async (req: Request, 
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('List users route error:', error);
+    console.error('List users controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.get('/:id', validateRequest(idParamSchema, 'params'), async (req: Request, res: Response) => {
+export const getById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const result = await getUserById(id);
@@ -49,12 +44,12 @@ router.get('/:id', validateRequest(idParamSchema, 'params'), async (req: Request
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Get user route error:', error);
+    console.error('Get user controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(updateUserSchema, 'body'), async (req: Request, res: Response) => {
+export const update = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const updates = req.body;
@@ -64,12 +59,12 @@ router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(upd
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Update user route error:', error);
+    console.error('Update user controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.delete('/:id', validateRequest(idParamSchema, 'params'), async (req: Request, res: Response) => {
+export const remove = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const result = await deleteUser(id);
@@ -77,9 +72,7 @@ router.delete('/:id', validateRequest(idParamSchema, 'params'), async (req: Requ
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Delete user route error:', error);
+    console.error('Delete user controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
-
-export default router;
+};
