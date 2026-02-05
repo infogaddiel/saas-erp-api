@@ -13,6 +13,7 @@ const router = Router();
 
 router.post('/', validateRequest(createUserSchema, 'body'), async (req: Request, res: Response) => {
   try {
+    console.log('Create user request body:', req.body);
     const { name, mobile, email, password, company_id, role_id, blocked } = req.body;
 
     const result = await createUser({ name, mobile, email, password, company_id, role_id, blocked });

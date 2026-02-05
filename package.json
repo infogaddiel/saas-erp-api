@@ -21,6 +21,7 @@
     "seed": "ts-node src/seeds/seedRoles.ts",
     "seed:companies": "ts-node src/seeds/seedCompanies.ts",
     "seed:menus": "ts-node src/seeds/seedMenus.ts",
+    "seed:users": "ts-node src/seeds/seedUsers.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
