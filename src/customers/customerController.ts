@@ -1,22 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import {
   createCustomer,
   getCustomers,
   getCustomerById,
   updateCustomer,
   deleteCustomer,
-} from '../services/customerService';
-import validateRequest from '../middlewares/validateRequest';
-import {
-  createCustomerSchema,
-  updateCustomerSchema,
-  listCustomersSchema,
-  idParamSchema,
-} from '../validators/customerValidator';
+} from './customerService';
 
-const router = Router();
-
-router.post('/', validateRequest(createCustomerSchema, 'body'), async (req: Request, res: Response) => {
+export const create = async (req: Request, res: Response) => {
   try {
     const { name, mobile, email, address, type, status, created_by } = req.body;
 
@@ -26,12 +17,12 @@ router.post('/', validateRequest(createCustomerSchema, 'body'), async (req: Requ
 
     return res.status(201).json(result);
   } catch (error) {
-    console.error('Create customer route error:', error);
+    console.error('Create customer controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.get('/', validateRequest(listCustomersSchema, 'query'), async (req: Request, res: Response) => {
+export const list = async (req: Request, res: Response) => {
   try {
     const page = parseInt((req.query.page as string) || '1', 10);
     const limit = parseInt((req.query.limit as string) || '20', 10);
@@ -41,12 +32,12 @@ router.get('/', validateRequest(listCustomersSchema, 'query'), async (req: Reque
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('List customers route error:', error);
+    console.error('List customers controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.get('/:id', validateRequest(idParamSchema, 'params'), async (req: Request, res: Response) => {
+export const getById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const result = await getCustomerById(id);
@@ -54,12 +45,12 @@ router.get('/:id', validateRequest(idParamSchema, 'params'), async (req: Request
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Get customer route error:', error);
+    console.error('Get customer controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(updateCustomerSchema, 'body'), async (req: Request, res: Response) => {
+export const update = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const updates = req.body;
@@ -69,12 +60,12 @@ router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(upd
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Update customer route error:', error);
+    console.error('Update customer controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
+};
 
-router.delete('/:id', validateRequest(idParamSchema, 'params'), async (req: Request, res: Response) => {
+export const remove = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const result = await deleteCustomer(id);
@@ -82,9 +73,7 @@ router.delete('/:id', validateRequest(idParamSchema, 'params'), async (req: Requ
 
     return res.status(200).json(result);
   } catch (error) {
-    console.error('Delete customer route error:', error);
+    console.error('Delete customer controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
-});
-
-export default router;
+};

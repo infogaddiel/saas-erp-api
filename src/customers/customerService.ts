@@ -39,7 +39,22 @@ export const getCustomers = async (page = 1, limit = 20) => {
       include: [{ model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] }],
     });
 
-    return { success: true, data: { total: count, customers: rows } };
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      success: true,
+      data: {
+        customers: rows,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+    };
   } catch (error) {
     console.error('getCustomers error:', error);
     return { success: false, message: 'Error fetching customers' };

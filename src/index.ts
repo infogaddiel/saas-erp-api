@@ -1,9 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './config/initdb';
-import authRoutes from './routes/auth';
-import customerRoutes from './routes/customers';
-import userRoutes from './routes/users';
+import authRoutes from './auth/auth';
+import customerRoutes from './customers/customers';
+import userRoutes from './users/users';
 import authenticate from './middlewares/authenticate';
 
 dotenv.config();

@@ -2,22 +2,18 @@ import Joi from 'joi';
 
 export const createCustomerSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  mobile: Joi.string().max(20).allow(null, '').optional(),
-  email: Joi.string().email().max(255).allow(null, '').optional(),
+  mobile: Joi.string().max(15).required(),
+  email: Joi.string().email().max(255).required(),
   address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
-  status: Joi.boolean().optional(),
-  created_by: Joi.number().integer().positive().optional().allow(null),
+  status: Joi.boolean().optional()
 });
 
 export const updateCustomerSchema = Joi.object({
-  name: Joi.string().max(255).optional(),
-  mobile: Joi.string().max(20).allow(null, '').optional(),
-  email: Joi.string().email().max(255).allow(null, '').optional(),
+  name: Joi.string().max(255).required(),
   address: Joi.string().allow(null, '').optional(),
-  type: Joi.string().valid('Individual', 'Company').optional(),
-  status: Joi.boolean().optional(),
-  created_by: Joi.number().integer().positive().optional().allow(null),
+  type: Joi.string().valid('Individual', 'Company').required(),
+  status: Joi.boolean().optional()
 }).min(1);
 
 export const listCustomersSchema = Joi.object({
