@@ -2,6 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { initializeDatabase } from './config/initdb';
 import authRoutes from './routes/auth';
+import customerRoutes from './routes/customers';
+import userRoutes from './routes/users';
+import authenticate from './middlewares/authenticate';
 
 dotenv.config();
 
@@ -14,6 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/customers', authenticate, customerRoutes);
+app.use('/api/users', authenticate, userRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
