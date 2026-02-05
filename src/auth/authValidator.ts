@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export const loginSchema = Joi.object({
-  mobile: Joi.string().max(20).required(),
+  email: Joi.string().max(100).required(),
   password: Joi.string().min(6).required(),
 });
 

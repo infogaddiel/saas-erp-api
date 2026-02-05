@@ -3,9 +3,9 @@ import { loginUser, verifyOTP } from './authService';
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { mobile, password } = req.body;
+    const { email, password } = req.body;
 
-    const result = await loginUser(mobile, password);
+    const result = await loginUser(email, password);
 
     if (!result.success) {
       return res.status(401).json(result);

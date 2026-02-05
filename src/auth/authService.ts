@@ -48,11 +48,11 @@ export const verifyOTP = async (userId: number, otp: string) => {
   }
 };
 
-export const loginUser = async (mobile: string, password: string) => {
+export const loginUser = async (email: string, password: string) => {
   try {
     // Find user by mobile number using Sequelize
     const user = await User.findOne({
-      where: { mobile },
+      where: { email },
       attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id'],
     });
 
