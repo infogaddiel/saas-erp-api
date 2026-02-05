@@ -23,9 +23,10 @@ export const login = async (req: Request, res: Response) => {
 
 export const verifyOtp = async (req: Request, res: Response) => {
   try {
-    const { user_id, otp } = req.body;
+    const { otp } = req.body;
+    const user = (req as any).user;
 
-    const result = await verifyOTP(user_id, otp);
+    const result = await verifyOTP(user.id, otp);
 
     if (!result.success) {
       return res.status(400).json(result);

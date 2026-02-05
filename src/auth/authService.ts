@@ -33,15 +33,7 @@ export const verifyOTP = async (userId: number, otp: string) => {
     // Clear OTP after verification
     await User.update({ mobile_otp: null }, { where: { id: userId } });
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error('JWT_SECRET is not set');
-      return { success: false, message: 'Server configuration error' };
-    }
-
-    const token = jwt.sign({ id: userId }, secret, { expiresIn: '1d' });
-
-    return { success: true, message: 'OTP verified successfully', token };
+    return { success: true, message: 'OTP verified successfully' };
   } catch (error) {
     console.error('OTP verification error:', error);
     return { success: false, message: 'An error occurred during OTP verification' };
@@ -72,11 +64,18 @@ export const loginUser = async (email: string, password: string) => {
 
     // Update user with OTP
     await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET is not set');
+      return { success: false, message: 'Server configuration error' };
+    }
 
+    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1d' });
     return {
       success: true,
       message: 'Login successful',
       otp,
+      token,
       user: {
         id: user.id,
         name: user.name,
