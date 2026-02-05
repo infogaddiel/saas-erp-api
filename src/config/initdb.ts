@@ -10,7 +10,7 @@ export const initializeDatabase = async () => {
     console.log('Database connection established');
 
     // Sync models with database
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     console.log('Database models synchronized');
 
     console.log('Database initialized successfully');
