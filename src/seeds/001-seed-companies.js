@@ -13,6 +13,8 @@ module.exports = {
       if (results.length === 0) {
         await queryInterface.bulkInsert('company', [{
           name,
+          mobile: '9632145879',
+          email: 'company@gaddiel.com',
           address: null,
           contract: null,
           created_at: new Date(),
