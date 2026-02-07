@@ -5,6 +5,7 @@ import { initializeDatabase } from './config/initdb';
 import authRoutes from './auth/auth';
 import customerRoutes from './customers/customers';
 import userRoutes from './users/users';
+import itemRoutes from './items/items';
 import authenticate from './middlewares/authenticate';
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', authenticate, customerRoutes);
 app.use('/api/users', authenticate, userRoutes);
+app.use('/api/items', authenticate, itemRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -48,7 +50,6 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Login API: POST http://localhost:${PORT}/api/auth/login`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -21,6 +21,14 @@ Company.init(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    mobile: {
+      type: DataTypes.STRING(15),
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
     address: {
       type: DataTypes.TEXT,
       allowNull: true,
