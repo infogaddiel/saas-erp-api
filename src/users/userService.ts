@@ -1,4 +1,4 @@
-import { User, Company, Role } from '../models';
+import { User, Company, Role, Permission, Menu } from '../models';
 import { hashPassword } from '../auth/authService';
 
 interface CreateUserInput {
@@ -9,6 +9,7 @@ interface CreateUserInput {
   company_id?: number | null;
   role_id?: number | null;
   blocked?: boolean;
+  menu_ids?: number[];
 }
 
 export const createUser = async (data: CreateUserInput) => {
@@ -34,7 +35,31 @@ export const createUser = async (data: CreateUserInput) => {
       blocked: data.blocked ?? false,
     });
 
-    return { success: true, data: user };
+    // Add permissions if menu_ids provided
+    if (data.menu_ids && Array.isArray(data.menu_ids) && data.menu_ids.length > 0) {
+      const permissions = data.menu_ids.map((menu_id) => ({
+        user_id: user.id,
+        menu_id,
+      }));
+      await Permission.bulkCreate(permissions);
+    }
+
+    // Fetch user with permissions
+    const userWithPermissions = await User.findByPk(user.id, {
+      include: [
+        { model: Company, as: 'company', attributes: ['id', 'name'] },
+        { model: Role, as: 'role', attributes: ['id', 'type'] },
+        {
+          model: Permission,
+          as: 'permissions',
+          attributes: ['id', 'menu_id'],
+          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
+        },
+      ],
+      attributes: { exclude: ['password'] },
+    });
+
+    return { success: true, data: userWithPermissions };
   } catch (error) {
     console.error('createUser error:', error);
     return { success: false, message: 'Error creating user' };
@@ -51,6 +76,12 @@ export const getUsers = async (page = 1, limit = 20) => {
       include: [
         { model: Company, as: 'company', attributes: ['id', 'name'] },
         { model: Role, as: 'role', attributes: ['id', 'type'] },
+        {
+          model: Permission,
+          as: 'permissions',
+          attributes: ['id', 'menu_id'],
+          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
+        },
       ],
       attributes: { exclude: ['password'] },
     });
@@ -83,6 +114,12 @@ export const getUserById = async (id: number) => {
       include: [
         { model: Company, as: 'company', attributes: ['id', 'name'] },
         { model: Role, as: 'role', attributes: ['id', 'type'] },
+        {
+          model: Permission,
+          as: 'permissions',
+          attributes: ['id', 'menu_id'],
+          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
+        },
       ],
       attributes: { exclude: ['password'] },
     });
@@ -116,8 +153,42 @@ export const updateUser = async (id: number, updates: Partial<CreateUserInput>) 
       if (other && other.id !== id) return { success: false, message: 'Email already in use' };
     }
 
-    await user.update(updates as any);
-    return { success: true, data: user };
+    // Handle permissions update if menu_ids provided
+    if (updates.menu_ids !== undefined) {
+      // Delete existing permissions for this user
+      await Permission.destroy({ where: { user_id: id } });
+
+      // Add new permissions if menu_ids array is not empty
+      if (Array.isArray(updates.menu_ids) && updates.menu_ids.length > 0) {
+        const permissions = updates.menu_ids.map((menu_id) => ({
+          user_id: id,
+          menu_id,
+        }));
+        await Permission.bulkCreate(permissions);
+      }
+    }
+
+    // Remove menu_ids from updates object before updating user
+    const { menu_ids, ...userUpdates } = updates;
+
+    await user.update(userUpdates as any);
+
+    // Fetch updated user with permissions
+    const updatedUser = await User.findByPk(id, {
+      include: [
+        { model: Company, as: 'company', attributes: ['id', 'name'] },
+        { model: Role, as: 'role', attributes: ['id', 'type'] },
+        {
+          model: Permission,
+          as: 'permissions',
+          attributes: ['id', 'menu_id'],
+          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
+        },
+      ],
+      attributes: { exclude: ['password'] },
+    });
+
+    return { success: true, data: updatedUser };
   } catch (error) {
     console.error('updateUser error:', error);
     return { success: false, message: 'Error updating user' };

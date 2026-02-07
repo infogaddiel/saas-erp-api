@@ -9,9 +9,9 @@ import {
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const { name, mobile, email, password, company_id, role_id, blocked } = req.body;
+    const { name, mobile, email, password, company_id, role_id, blocked, menu_ids } = req.body;
 
-    const result = await createUser({ name, mobile, email, password, company_id, role_id, blocked });
+    const result = await createUser({ name, mobile, email, password, company_id, role_id, blocked, menu_ids });
     if (!result.success) return res.status(400).json(result);
 
     return res.status(201).json(result);

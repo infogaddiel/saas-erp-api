@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { User } from '../models';
+import { User, Permission, Menu, Role } from '../models';
 
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 10;
@@ -42,10 +42,13 @@ export const verifyOTP = async (userId: number, otp: string) => {
 
 export const loginUser = async (email: string, password: string) => {
   try {
-    // Find user by mobile number using Sequelize
+    // Find user by email with role
     const user = await User.findOne({
       where: { email },
-      attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id'],
+      include: [
+        { model: Role, as: 'role', attributes: ['id', 'type'] },
+      ],
+      attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id', 'role_id'],
     });
 
     if (!user) {
@@ -64,6 +67,7 @@ export const loginUser = async (email: string, password: string) => {
 
     // Update user with OTP
     await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+
     const secret = process.env.JWT_SECRET;
     if (!secret) {
       console.error('JWT_SECRET is not set');
@@ -71,6 +75,38 @@ export const loginUser = async (email: string, password: string) => {
     }
 
     const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1d' });
+
+    // Get permissions based on role
+    let permissions: any[] = [];
+
+    const userRole = (user as any).role;
+
+    if (userRole && userRole.type === 'Super Admin') {
+      // Super Admin gets all menus
+      const allMenus = await Menu.findAll({
+        attributes: ['id', 'name'],
+        where: { status: true },
+      });
+      permissions = allMenus.map((menu: any) => ({
+        id: null,
+        menu_id: menu.id,
+        menu: {
+          id: menu.id,
+          name: menu.name,
+        },
+      }));
+    } else {
+      // Get only assigned permissions
+      const userPermissions = await Permission.findAll({
+        where: { user_id: user.id },
+        include: [
+          { model: Menu, as: 'menu', attributes: ['id', 'name'] },
+        ],
+        attributes: ['id', 'menu_id'],
+      });
+      permissions = userPermissions;
+    }
+
     return {
       success: true,
       message: 'Login successful',
@@ -83,6 +119,8 @@ export const loginUser = async (email: string, password: string) => {
         mobile: user.mobile,
         profile_image: user.profile_image,
         company_id: user.company_id,
+        role: userRole,
+        permissions,
       },
     };
   } catch (error) {

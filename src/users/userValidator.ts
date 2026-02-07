@@ -8,6 +8,7 @@ export const createUserSchema = Joi.object({
   company_id: Joi.number().integer().positive().optional().allow(null),
   role_id: Joi.number().integer().positive().optional().allow(null),
   blocked: Joi.boolean().optional(),
+  menu_ids: Joi.array().items(Joi.number().integer().positive()).optional(),
 });
 
 export const updateUserSchema = Joi.object({
@@ -18,6 +19,7 @@ export const updateUserSchema = Joi.object({
   company_id: Joi.number().integer().positive().optional().allow(null),
   role_id: Joi.number().integer().positive().optional().allow(null),
   blocked: Joi.boolean().optional(),
+  menu_ids: Joi.array().items(Joi.number().integer().positive()).optional(),
 }).min(1);
 
 export const listUsersSchema = Joi.object({

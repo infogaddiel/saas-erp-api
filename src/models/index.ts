@@ -4,6 +4,7 @@ import Role from './Role';
 import Customer from './Customer';
 import Menu from './Menu';
 import Item from './Item';
+import Permission from './Permission';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -17,12 +18,15 @@ Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
 Customer.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(Customer, { foreignKey: 'created_by', as: 'customers' });
 
-// User - Menu many-to-many
-User.belongsToMany(Menu, { through: 'user_menus', as: 'menus', foreignKey: 'user_id', otherKey: 'menu_id' });
+// User - Menu many-to-many through Permission
+User.hasMany(Permission, { foreignKey: 'user_id', as: 'permissions' });
+Permission.belongsTo(User, { foreignKey: 'user_id' });
+
+Permission.belongsTo(Menu, { foreignKey: 'menu_id', as: 'menu' });
+Menu.hasMany(Permission, { foreignKey: 'menu_id', as: 'permissions' });
 
 // User - Item (created_by)
 Item.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(Item, { foreignKey: 'created_by', as: 'items' });
-Menu.belongsToMany(User, { through: 'user_menus', as: 'users', foreignKey: 'menu_id', otherKey: 'user_id' });
 
-export { User, Company, Role, Customer, Menu, Item };  
+export { User, Company, Role, Customer, Menu, Item, Permission };  
