@@ -53,7 +53,9 @@ export const list = async (req: Request, res: Response) => {
     const page = parseInt((req.query.page as string) || '1', 10);
     const limit = parseInt((req.query.limit as string) || '20', 10);
 
-    const result = await getItems(page, limit);
+    const name = (req.query.name as string) || undefined;
+
+    const result = await getItems(page, limit, name);
     if (!result.success) return res.status(500).json(result);
 
     return res.status(200).json(result);

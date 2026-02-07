@@ -1,4 +1,5 @@
 import { Item, User } from '../models';
+import { Op } from 'sequelize';
 
 interface CreateItemInput {
   item_code: string;
@@ -39,10 +40,19 @@ export const createItem = async (data: CreateItemInput) => {
   }
 };
 
-export const getItems = async (page = 1, limit = 20) => {
+export const getItems = async (page = 1, limit = 20, name?: string) => {
   try {
     const offset = (page - 1) * limit;
+    const where: any = {};
+    if (typeof name !== 'undefined' && name !== '') {
+      where[Op.or] = [
+        { item_name: { [Op.iLike]: `%${name}%` } },
+        { item_code: { [Op.iLike]: `%${name}%` } },
+      ];
+    }
+
     const { count, rows } = await Item.findAndCountAll({
+      where,
       offset,
       limit,
       order: [['id', 'DESC']],

@@ -2,6 +2,21 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, Permission, Menu, Role } from '../models';
 
+export const getRoles = async () => {
+  try {
+    const roles = await Role.findAll({
+      where: { is_active: true },
+      attributes: ['id', 'type', 'company_id'],
+      order: [['id', 'ASC']],
+    });
+
+    return { success: true, data: roles };
+  } catch (error) {
+    console.error('getRoles error:', error);
+    return { success: false, message: 'Error fetching roles' };
+  }
+};
+
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 10;
   return bcrypt.hash(password, saltRounds);

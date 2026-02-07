@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { loginUser, verifyOTP } from './authService';
+import { loginUser, verifyOTP, getRoles as getRolesService } from './authService';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -39,5 +39,16 @@ export const verifyOtp = async (req: Request, res: Response) => {
       success: false,
       message: 'An error occurred',
     });
+  }
+};
+
+export const getRoles = async (req: Request, res: Response) => {
+  try {
+    const result = await getRolesService();
+    if (!result.success) return res.status(500).json(result);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Get roles controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

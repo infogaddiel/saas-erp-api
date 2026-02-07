@@ -1,4 +1,5 @@
 import { Customer, User } from '../models';
+import { Op } from 'sequelize';
 
 interface CreateCustomerInput {
   name: string;
@@ -29,10 +30,16 @@ export const createCustomer = async (data: CreateCustomerInput) => {
   }
 };
 
-export const getCustomers = async (page = 1, limit = 20) => {
+export const getCustomers = async (page = 1, limit = 20, name?: string) => {
   try {
     const offset = (page - 1) * limit;
+    const where: any = {};
+    if (typeof name !== 'undefined' && name !== '') {
+      where.name = { [Op.iLike]: `%${name}%` };
+    }
+
     const { count, rows } = await Customer.findAndCountAll({
+      where,
       offset,
       limit,
       order: [['id', 'DESC']],

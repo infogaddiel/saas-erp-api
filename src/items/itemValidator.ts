@@ -32,6 +32,8 @@ export const updateItemSchema = Joi.object({
 export const listItemsSchema = Joi.object({
   page: Joi.number().integer().min(1).optional().default(1),
   limit: Joi.number().integer().min(1).max(100).optional().default(20),
+  name: Joi.string().max(255).optional(),
+  code: Joi.string().max(100).optional(),
 });
 
 export const idParamSchema = Joi.object({
