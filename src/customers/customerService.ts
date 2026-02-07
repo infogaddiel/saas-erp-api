@@ -1,5 +1,6 @@
 import { Customer, User } from '../models';
 import { Op } from 'sequelize';
+import ExcelJS from 'exceljs';
 
 interface CreateCustomerInput {
   name: string;
@@ -106,5 +107,91 @@ export const deleteCustomer = async (id: number) => {
   } catch (error) {
     console.error('deleteCustomer error:', error);
     return { success: false, message: 'Error deleting customer' };
+  }
+};
+export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], userId: number) => {
+  try {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
+      return { success: false, message: 'Invalid data: Expected non-empty array' };
+    }
+
+    const customers = await Customer.bulkCreate(
+      dataArray.map((data) => ({
+        name: data.name,
+        mobile: data.mobile ?? null,
+        email: data.email ?? null,
+        address: data.address ?? null,
+        type: data.type,
+        created_by: userId,
+      })),
+      { validate: true }
+    );
+
+    return {
+      success: true,
+      message: `${customers.length} customers created successfully`,
+      data: { count: customers.length, customers },
+    };
+  } catch (error) {
+    console.error('bulkCreateCustomers error:', error);
+    return { success: false, message: 'Error creating customers in bulk' };
+  }
+};
+
+export const exportCustomersToExcel = async () => {
+  try {
+    const customers = await Customer.findAll({
+      include: [{ model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] }],
+      order: [['id', 'ASC']],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Customers');
+
+    // Set columns
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Name', key: 'name', width: 20 },
+      { header: 'Mobile', key: 'mobile', width: 15 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Address', key: 'address', width: 30 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Created By', key: 'createdBy', width: 20 },
+      { header: 'Created At', key: 'created_at', width: 18 },
+      { header: 'Updated At', key: 'updated_at', width: 18 },
+    ];
+
+    // Add data
+    customers.forEach((customer: any) => {
+      worksheet.addRow({
+        id: customer.id,
+        name: customer.name,
+        mobile: customer.mobile,
+        email: customer.email,
+        address: customer.address,
+        type: customer.type,
+        status: customer.status ? 'Active' : 'Inactive',
+        createdBy: customer.createdBy?.name || 'N/A',
+        created_at: customer.created_at,
+        updated_at: customer.updated_at,
+      });
+    });
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' },
+    };
+
+    return {
+      success: true,
+      data: workbook,
+    };
+  } catch (error) {
+    console.error('exportCustomersToExcel error:', error);
+    return { success: false, message: 'Error exporting customers', data: null };
   }
 };

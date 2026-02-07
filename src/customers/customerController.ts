@@ -5,6 +5,8 @@ import {
   getCustomerById,
   updateCustomer,
   deleteCustomer,
+  bulkCreateCustomers,
+  exportCustomersToExcel,
 } from './customerService';
 
 declare global {
@@ -84,6 +86,42 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete customer controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const bulkCreate = async (req: Request, res: Response) => {
+  try {
+    const { customers } = req.body;
+    const userId = parseInt(req.user?.id as string);
+
+    if (!Array.isArray(customers)) {
+      return res.status(400).json({ success: false, message: 'Expected "customers" array in body' });
+    }
+
+    const result = await bulkCreateCustomers(customers, userId);
+    if (!result.success) return res.status(400).json(result);
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Bulk create customers controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (req: Request, res: Response) => {
+  try {
+    const result = await exportCustomersToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `customers-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export customers controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

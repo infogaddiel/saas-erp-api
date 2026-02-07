@@ -5,6 +5,8 @@ import {
   getItemById,
   updateItem,
   deleteItem,
+  bulkCreateItems,
+  exportItemsToExcel,
 } from './itemService';
 
 export const create = async (req: Request, res: Response) => {
@@ -105,3 +107,39 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };
+
+export const bulkCreate = async (req: Request, res: Response) => {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ success: false, message: 'Expected "items" array in body' });
+    }
+
+    const result = await bulkCreateItems(items);
+    if (!result.success) return res.status(400).json(result);
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Bulk create items controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (req: Request, res: Response) => {
+  try {
+    const result = await exportItemsToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `items-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export items controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+

@@ -1,5 +1,6 @@
 import { User, Company, Role, Permission, Menu } from '../models';
 import { hashPassword } from '../auth/authService';
+import { Op } from 'sequelize';
 
 interface CreateUserInput {
   name: string;
@@ -66,7 +67,7 @@ export const createUser = async (data: CreateUserInput) => {
   }
 };
 
-export const getUsers = async (page = 1, limit = 20) => {
+export const getUsers = async (page = 1, limit = 20, userId?: number) => {
   try {
     const offset = (page - 1) * limit;
     const { count, rows } = await User.findAndCountAll({
@@ -84,6 +85,7 @@ export const getUsers = async (page = 1, limit = 20) => {
         },
       ],
       attributes: { exclude: ['password'] },
+      where: { role_id: { [Op.ne]: 1}, id: {[Op.ne]: userId} }, // Exclude users without a role
     });
 
     const totalPages = Math.ceil(count / limit);
