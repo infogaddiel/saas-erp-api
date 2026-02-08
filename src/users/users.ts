@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { create, list, getById, update, remove } from './userController';
+import { create, list, getById, update, remove, dropdown } from './userController';
 import validateRequest from '../middlewares/validateRequest';
-import { createUserSchema, updateUserSchema, listUsersSchema, idParamSchema } from './userValidator';
+import { createUserSchema, updateUserSchema, listUsersSchema, idParamSchema, dropdownUsersSchema } from './userValidator';
 
 const router = Router();
 
 router.post('/', validateRequest(createUserSchema, 'body'), create);
+router.get('/dropdown', validateRequest(dropdownUsersSchema, 'query'), dropdown);
 router.get('/', validateRequest(listUsersSchema, 'query'), list);
 router.get('/:id', validateRequest(idParamSchema, 'params'), getById);
 router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(updateUserSchema, 'body'), update);

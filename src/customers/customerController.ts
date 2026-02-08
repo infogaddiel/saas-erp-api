@@ -7,12 +7,13 @@ import {
   deleteCustomer,
   bulkCreateCustomers,
   exportCustomersToExcel,
+  getCustomersForDropdown,
 } from './customerService';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: { id: string | number };
+      user?: { id: string | number; company_id?: number | null };
     }
   }
 }
@@ -122,6 +123,23 @@ export const exportExcel = async (req: Request, res: Response) => {
     res.end();
   } catch (error) {
     console.error('Export customers controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const companyId = req.user?.company_id;
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'User company not found' });
+    }
+
+    const result = await getCustomersForDropdown(companyId);
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown customers controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

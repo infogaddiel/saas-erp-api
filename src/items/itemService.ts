@@ -54,6 +54,7 @@ export const getItems = async (page = 1, limit = 20, name?: string) => {
 
     const { count, rows } = await Item.findAndCountAll({
       where,
+      distinct: true,
       offset,
       limit,
       order: [['id', 'DESC']],

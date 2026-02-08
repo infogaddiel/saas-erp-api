@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { create, list, getById, update, remove, bulkCreate, exportExcel } from './customerController';
+import { create, list, getById, update, remove, bulkCreate, exportExcel, dropdown } from './customerController';
 import validateRequest from '../middlewares/validateRequest';
 import {
   createCustomerSchema,
@@ -14,6 +14,7 @@ const router = Router();
 router.post('/', validateRequest(createCustomerSchema, 'body'), create);
 router.post('/bulk/create', validateRequest(bulkCreateCustomersSchema, 'body'), bulkCreate);
 router.get('/export/excel', exportExcel);
+router.get('/dropdown', dropdown);
 router.get('/', validateRequest(listCustomersSchema, 'query'), list);
 router.get('/:id', validateRequest(idParamSchema, 'params'), getById);
 router.put('/:id', validateRequest(idParamSchema, 'params'), validateRequest(updateCustomerSchema, 'body'), update);
