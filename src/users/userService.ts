@@ -73,6 +73,7 @@ export const getUsers = async (page = 1, limit = 20, userId?: number) => {
     const { count, rows } = await User.findAndCountAll({
       offset,
       limit,
+      distinct: true,
       order: [['id', 'DESC']],
       include: [
         { model: Company, as: 'company', attributes: ['id', 'name'] },
@@ -207,5 +208,25 @@ export const deleteUser = async (id: number) => {
   } catch (error) {
     console.error('deleteUser error:', error);
     return { success: false, message: 'Error deleting user' };
+  }
+};
+
+export const getUsersForDropdown = async (companyId: number, roleId?: number) => {
+  try {
+    const where: any = { company_id: companyId };
+    if (typeof roleId !== 'undefined') {
+      where.role_id = roleId;
+    }
+
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'role_id'],
+      where,
+      order: [['name', 'ASC']],
+    });
+
+    return { success: true, data: users };
+  } catch (error) {
+    console.error('getUsersForDropdown error:', error);
+    return { success: false, message: 'Error fetching users for dropdown' };
   }
 };

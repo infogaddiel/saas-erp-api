@@ -41,6 +41,7 @@ export const getCustomers = async (page = 1, limit = 20, name?: string) => {
 
     const { count, rows } = await Customer.findAndCountAll({
       where,
+      distinct: true,
       offset,
       limit,
       order: [['id', 'DESC']],
@@ -193,5 +194,28 @@ export const exportCustomersToExcel = async () => {
   } catch (error) {
     console.error('exportCustomersToExcel error:', error);
     return { success: false, message: 'Error exporting customers', data: null };
+  }
+};
+
+export const getCustomersForDropdown = async (companyId: number) => {
+  try {
+    const customers = await Customer.findAll({
+      attributes: ['id', 'name'],
+      include: [
+        {
+          model: User,
+          as: 'createdBy',
+          attributes: [],
+          where: { company_id: companyId },
+          required: true,
+        },
+      ],
+      order: [['name', 'ASC']],
+    });
+
+    return { success: true, data: customers };
+  } catch (error) {
+    console.error('getCustomersForDropdown error:', error);
+    return { success: false, message: 'Error fetching customers for dropdown' };
   }
 };

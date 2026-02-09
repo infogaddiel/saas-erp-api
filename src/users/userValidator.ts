@@ -27,6 +27,10 @@ export const listUsersSchema = Joi.object({
   limit: Joi.number().integer().min(1).max(100).optional().default(20),
 });
 
+export const dropdownUsersSchema = Joi.object({
+  role_id: Joi.number().integer().positive().optional(),
+});
+
 export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });

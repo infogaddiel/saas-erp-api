@@ -6,6 +6,32 @@ class Company extends Model {
   public name!: string;
   public address!: string | null;
   public contract!: string | null;
+  public logo!: string | null;
+  public email!: string | null;
+  public mobile!: string | null;
+  public status!: boolean;
+  public license_number!: string | null;
+  public license_expiry_date!: Date | null;
+  public license_image!: string | null;
+  public license_type!: string | null;
+  public license_status!: string | null;
+  public license_renewal_date!: Date | null;
+  public license_renewal_amount!: number | null;
+  public license_renewal_status!: string | null;
+  public gst_number!: string | null;
+  public gst_certificate!: string | null;
+  public gst_certificate_expiry_date!: Date | null;
+  public gst_certificate_status!: string | null;
+  public gst_certificate_renewal_date!: Date | null;
+  public gst_certificate_renewal_amount!: number | null;
+  public gst_certificate_renewal_status!: string | null;
+  public pan_number!: string | null;
+  public pan_certificate!: string | null;
+  public pan_certificate_expiry_date!: Date | null;
+  public pan_certificate_status!: string | null;
+  public pan_certificate_renewal_date!: Date | null;
+  public pan_certificate_renewal_amount!: number | null;
+  public pan_certificate_renewal_status!: string | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -35,6 +61,103 @@ Company.init(
     },
     contract: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    logo: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    status: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    license_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    license_expiry_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    license_image: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    license_type: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    license_status: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    license_renewal_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    license_renewal_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    license_renewal_status: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    gst_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    gst_certificate: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    gst_certificate_expiry_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    gst_certificate_status: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    gst_certificate_renewal_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    gst_certificate_renewal_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    gst_certificate_renewal_status: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    pan_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    pan_certificate: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    pan_certificate_expiry_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    pan_certificate_status: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    pan_certificate_renewal_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    pan_certificate_renewal_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
+    pan_certificate_renewal_status: {
+      type: DataTypes.STRING(100),
       allowNull: true,
     },
     created_at: {

@@ -5,6 +5,7 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  getUsersForDropdown,
 } from './userService';
 
 export const create = async (req: Request, res: Response) => {
@@ -75,6 +76,25 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete user controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).user?.company_id;
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'User company not found' });
+    }
+
+    const roleId = req.query.role_id ? parseInt(req.query.role_id as string, 10) : undefined;
+
+    const result = await getUsersForDropdown(companyId, roleId);
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown users controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

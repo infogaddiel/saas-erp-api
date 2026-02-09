@@ -6,6 +6,7 @@ import authRoutes from './auth/auth';
 import customerRoutes from './customers/customers';
 import userRoutes from './users/users';
 import itemRoutes from './items/items';
+import ticketRoutes from './tickets/tickets';
 import authenticate from './middlewares/authenticate';
 
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/customers', authenticate, customerRoutes);
 app.use('/api/users', authenticate, userRoutes);
 app.use('/api/items', authenticate, itemRoutes);
+app.use('/api/tickets', authenticate, ticketRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
