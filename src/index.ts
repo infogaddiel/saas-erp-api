@@ -19,7 +19,9 @@ const corsOptions = {
     'http://localhost:3000',  // React default
     'http://localhost:8100',  // React default
     'capacitor://localhost', 
-    'http://localhost'
+    'http://localhost',
+    'https://semak-erp.gaddiel.io/',
+    'http://semak-erp.gaddiel.io/'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
