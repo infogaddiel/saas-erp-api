@@ -200,7 +200,7 @@ export const exportCustomersToExcel = async () => {
 export const getCustomersForDropdown = async (companyId: number) => {
   try {
     const customers = await Customer.findAll({
-      attributes: ['id', 'name'],
+      attributes: ['id', 'name','mobile','email','address'],
       include: [
         {
           model: User,
