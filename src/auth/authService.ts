@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, Permission, Menu, Role } from '../models';
+import { sendOtpViaGetRequest } from '../utils/otpGateway';
 
 export const getRoles = async () => {
   try {
@@ -122,6 +123,7 @@ export const loginUser = async (email: string, password: string) => {
       });
       permissions = userPermissions;
     }
+   await sendOtpViaGetRequest(user.mobile, otp); // Send OTP to user's mobile
 
     return {
       success: true,
