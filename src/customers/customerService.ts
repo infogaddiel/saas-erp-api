@@ -197,10 +197,11 @@ export const exportCustomersToExcel = async () => {
   }
 };
 
-export const getCustomersForDropdown = async (companyId: number) => {
+export const getCustomersForDropdown = async (companyId: number,whereCondition:any = {}) => {
   try {
     const customers = await Customer.findAll({
-      attributes: ['id', 'name'],
+      attributes: ['id', 'name','mobile','email','address'],
+      where:whereCondition,
       include: [
         {
           model: User,
