@@ -20,6 +20,7 @@ export const createTicketSchema = Joi.object({
   customer_id: Joi.number().integer().positive().required().messages({
     'any.required': 'customer_id is required',
   }),
+  status_id: Joi.number().integer().positive().optional(),
   service_address: Joi.string().min(1).max(2000).required().messages({
     'string.empty': 'Service address is required',
   }),
@@ -40,6 +41,7 @@ export const createTicketSchema = Joi.object({
 
 export const updateTicketSchema = Joi.object({
   customer_id: Joi.number().integer().positive().optional(),
+  status_id: Joi.number().integer().positive().optional(),
   service_address: Joi.string().min(1).max(2000).optional(),
   priority: Joi.string()
     .optional(),
@@ -55,6 +57,7 @@ export const updateTicketSchema = Joi.object({
 export const listTicketsSchema = Joi.object({
   page: Joi.number().integer().min(1).optional().default(1),
   limit: Joi.number().integer().min(1).max(100).optional().default(20),
+  status_id: Joi.number().integer().positive().optional(),
   priority: Joi.string()
     .optional(),
   service_type: Joi.string()

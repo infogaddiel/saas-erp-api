@@ -6,6 +6,8 @@ import Menu from './Menu';
 import Item from './Item';
 import Permission from './Permission';
 import Ticket from './Ticket';
+import TicketStatus from './TicketStatus';
+import TicketStatusHistory from './TicketStatusHistory';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -34,6 +36,10 @@ User.hasMany(Item, { foreignKey: 'created_by', as: 'items' });
 Ticket.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 Customer.hasMany(Ticket, { foreignKey: 'customer_id', as: 'tickets' });
 
+// Ticket - TicketStatus
+Ticket.belongsTo(TicketStatus, { foreignKey: 'status_id', as: 'status' });
+TicketStatus.hasMany(Ticket, { foreignKey: 'status_id', as: 'tickets' });
+
 // Ticket - User (assigned technician, optional)
 Ticket.belongsTo(User, { foreignKey: 'assigned_technician_id', as: 'assignedTechnician' });
 User.hasMany(Ticket, { foreignKey: 'assigned_technician_id', as: 'assignedTickets' });
@@ -42,4 +48,16 @@ User.hasMany(Ticket, { foreignKey: 'assigned_technician_id', as: 'assignedTicket
 Ticket.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(Ticket, { foreignKey: 'created_by', as: 'tickets' });
 
-export { User, Company, Role, Customer, Menu, Item, Permission, Ticket };  
+// TicketStatusHistory - Ticket
+TicketStatusHistory.belongsTo(Ticket, { foreignKey: 'ticket_id', as: 'ticket' });
+Ticket.hasMany(TicketStatusHistory, { foreignKey: 'ticket_id', as: 'statusHistory' });
+
+// TicketStatusHistory - TicketStatus
+TicketStatusHistory.belongsTo(TicketStatus, { foreignKey: 'status_id', as: 'status' });
+TicketStatus.hasMany(TicketStatusHistory, { foreignKey: 'status_id', as: 'history' });
+
+// TicketStatusHistory - User (changed_by)
+TicketStatusHistory.belongsTo(User, { foreignKey: 'changed_by', as: 'changedBy' });
+User.hasMany(TicketStatusHistory, { foreignKey: 'changed_by', as: 'ticketStatusChanges' });
+
+export { User, Company, Role, Customer, Menu, Item, Permission, Ticket, TicketStatus, TicketStatusHistory };

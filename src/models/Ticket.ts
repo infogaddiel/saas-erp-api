@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 class Ticket extends Model {
   public id!: number;
   public customer_id!: number;
+  public status_id!: number;
   public service_address!: string;
   public priority!: string;
   public service_type!: string;
@@ -27,6 +28,14 @@ Ticket.init(
     customer_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    status_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'ticket_statuses',
+        key: 'id',
+      },
     },
     service_address: {
       type: DataTypes.TEXT,
