@@ -8,6 +8,8 @@ import userRoutes from './users/users';
 import itemRoutes from './items/items';
 import ticketRoutes from './tickets/tickets';
 import authenticate from './middlewares/authenticate';
+import uploadRoutes from './uploads/uploads';
+import path from 'path';
 
 dotenv.config();
 
@@ -33,6 +35,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -40,6 +43,7 @@ app.use('/api/customers', authenticate, customerRoutes);
 app.use('/api/users', authenticate, userRoutes);
 app.use('/api/items', authenticate, itemRoutes);
 app.use('/api/tickets', authenticate, ticketRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
