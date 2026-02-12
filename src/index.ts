@@ -9,6 +9,7 @@ import itemRoutes from './items/items';
 import ticketRoutes from './tickets/tickets';
 import authenticate from './middlewares/authenticate';
 import uploadRoutes from './uploads/uploads';
+import companyRoutes from './companies/companies';
 import path from 'path';
 
 dotenv.config();
@@ -41,6 +42,7 @@ app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', authenticate, customerRoutes);
 app.use('/api/users', authenticate, userRoutes);
+app.use('/api/companies', authenticate, companyRoutes);
 app.use('/api/items', authenticate, itemRoutes);
 app.use('/api/tickets', authenticate, ticketRoutes);
 app.use('/api/uploads', uploadRoutes);
