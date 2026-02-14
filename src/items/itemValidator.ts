@@ -3,6 +3,7 @@ import Joi from 'joi';
 export const createItemSchema = Joi.object({
   item_code: Joi.string().max(100).required(),
   item_name: Joi.string().max(255).required(),
+  item_image: Joi.string().max(2048).allow(null, '').optional(),
   description: Joi.string().allow(null, '').optional(),
   type: Joi.string().max(100).required(),
   category: Joi.string().max(100).required(),
@@ -18,6 +19,7 @@ export const createItemSchema = Joi.object({
 export const updateItemSchema = Joi.object({
   item_code: Joi.string().max(100).optional(),
   item_name: Joi.string().max(255).optional(),
+  item_image: Joi.string().max(2048).allow(null, '').optional(),
   description: Joi.string().allow(null, '').optional(),
   type: Joi.string().max(100).optional(),
   category: Joi.string().max(100).optional(),
@@ -45,6 +47,7 @@ export const bulkCreateItemsSchema = Joi.object({
       Joi.object({
         item_code: Joi.string().max(100).required(),
         item_name: Joi.string().max(255).required(),
+        item_image: Joi.string().max(2048).allow(null, '').optional(),
         description: Joi.string().allow(null, '').optional(),
         type: Joi.string().max(100).required(),
         category: Joi.string().max(100).required(),

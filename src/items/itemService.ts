@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 interface CreateItemInput {
   item_code: string;
   item_name: string;
+  item_image?: string | null;
   description?: string | null;
   type: string;
   category: string;
@@ -22,6 +23,7 @@ export const createItem = async (data: CreateItemInput) => {
     const item = await Item.create({
       item_code: data.item_code,
       item_name: data.item_name,
+      item_image: data.item_image ?? null,
       description: data.description ?? null,
       type: data.type,
       category: data.category,
@@ -133,6 +135,7 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[]) => {
       dataArray.map((data) => ({
         item_code: data.item_code,
         item_name: data.item_name,
+        item_image: data.item_image ?? null,
         description: data.description ?? null,
         type: data.type,
         category: data.category,

@@ -5,6 +5,7 @@ class Item extends Model {
   public id!: number;
   public item_code!: string;
   public item_name!: string;
+  public item_image!: string | null;
   public description!: string | null;
   public type!: string;
   public category!: string;
@@ -34,6 +35,10 @@ Item.init(
     item_name: {
       type: DataTypes.STRING(255),
       allowNull: false,
+    },
+    item_image: {
+      type: DataTypes.STRING(2048),
+      allowNull: true,
     },
     description: {
       type: DataTypes.TEXT,

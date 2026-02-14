@@ -27,6 +27,9 @@ const allowedMimeTypes = new Set([
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'text/plain',
   'text/csv',
+  'audio/mpeg',
+  'video/mp4',
+  'video/webm'
 ]);
 
 const allowedExtensions = new Set([
@@ -45,6 +48,10 @@ const allowedExtensions = new Set([
   '.pptx',
   '.txt',
   '.csv',
+  '.mp3',
+  '.mp4',
+  '.webm',
+  '.mpeg'
 ]);
 
 const storage = multer.diskStorage({

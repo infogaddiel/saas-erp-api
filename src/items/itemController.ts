@@ -14,6 +14,7 @@ export const create = async (req: Request, res: Response) => {
     const {
       item_code,
       item_name,
+      item_image,
       description,
       type,
       category,
@@ -29,6 +30,7 @@ export const create = async (req: Request, res: Response) => {
     const result = await createItem({
       item_code,
       item_name,
+      item_image,
       description,
       type,
       category,
