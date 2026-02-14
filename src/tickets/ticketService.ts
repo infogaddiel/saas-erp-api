@@ -195,6 +195,20 @@ export const getTicketById = async (id: number) => {
   }
 };
 
+export const getTicketStatuses = async () => {
+  try {
+    const statuses = await TicketStatus.findAll({
+      attributes: ['id', 'name'],
+      order: [['name', 'ASC']],
+    });
+
+    return { success: true, data: statuses };
+  } catch (error) {
+    console.error('getTicketStatuses error:', error);
+    return { success: false, message: 'Error fetching ticket statuses' };
+  }
+};
+
 export const updateTicket = async (id: number, updates: UpdateTicketInput) => {
   try {
     await sequelize.transaction(async (transaction) => {

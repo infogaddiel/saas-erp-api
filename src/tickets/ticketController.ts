@@ -3,6 +3,7 @@ import {
   createTicket,
   getTickets,
   getTicketById,
+  getTicketStatuses,
   getTicketStatusHistory,
   updateTicket,
   deleteTicket,
@@ -100,6 +101,18 @@ export const getById = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Get ticket controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const statuses = async (_req: Request, res: Response) => {
+  try {
+    const result = await getTicketStatuses();
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Get ticket statuses controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };
