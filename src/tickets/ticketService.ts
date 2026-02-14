@@ -1,5 +1,5 @@
 import sequelize from '../config/database';
-import { Ticket, User, Customer, TicketStatus, TicketStatusHistory } from '../models';
+import { Ticket, User, Customer, TicketStatus, TicketStatusHistory, TicketService as TicketServiceModel } from '../models';
 
 /** Convert dd-mm-yyyy to YYYY-MM-DD for DATEONLY storage */
 function parseScheduledDate(value: string | null | undefined): string | null {
@@ -28,6 +28,24 @@ interface UpdateTicketInput extends Partial<CreateTicketInput> {
   changed_by?: number | null;
 }
 
+interface CreateTicketServiceInput {
+  ticket_id: number;
+  customer_id: number;
+  email?: string | null;
+  phone?: string | null;
+  service_date?: string | null;
+  service_address: string;
+  service_type?: string;
+  technician_name?: string | null;
+  equipment_type?: string | null;
+  equipment_model?: string | null;
+  work_performed?: string | null;
+  parts_used?: string | null;
+  labor_hours?: number;
+}
+
+interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> {}
+
 const OPEN_STATUS_NAME = 'Open';
 
 async function getOpenStatusId(transaction?: any): Promise<number | null> {
@@ -37,6 +55,10 @@ async function getOpenStatusId(transaction?: any): Promise<number | null> {
     transaction,
   });
   return status?.id ?? null;
+}
+
+function parseDate(value: string | null | undefined): string | null {
+  return parseScheduledDate(value);
 }
 
 async function createTicketStatusHistory(
@@ -248,5 +270,100 @@ export const deleteTicket = async (id: number) => {
   } catch (error) {
     console.error('deleteTicket error:', error);
     return { success: false, message: 'Error deleting ticket' };
+  }
+};
+
+export const createTicketService = async (data: CreateTicketServiceInput) => {
+  try {
+    const ticket = await Ticket.findByPk(data.ticket_id);
+    if (!ticket) return { success: false, message: 'Ticket not found' };
+
+    const created = await TicketServiceModel.create({
+      ticket_id: data.ticket_id,
+      customer_id: data.customer_id,
+      email: data.email ?? null,
+      phone: data.phone ?? null,
+      service_date: parseDate(data.service_date ?? undefined),
+      service_address: data.service_address,
+      service_type: data.service_type ?? 'Repair',
+      technician_name: data.technician_name ?? null,
+      equipment_type: data.equipment_type ?? null,
+      equipment_model: data.equipment_model ?? null,
+      work_performed: data.work_performed ?? null,
+      parts_used: data.parts_used ?? null,
+      labor_hours: data.labor_hours ?? 0,
+    });
+
+    return { success: true, data: created };
+  } catch (error) {
+    console.error('createTicketService error:', error);
+    return { success: false, message: 'Error creating ticket service' };
+  }
+};
+
+export const getTicketServices = async (ticketId: number) => {
+  try {
+    const ticket = await Ticket.findByPk(ticketId);
+    if (!ticket) return { success: false, message: 'Ticket not found' };
+
+    const services = await TicketServiceModel.findAll({
+      where: { ticket_id: ticketId },
+      order: [['id', 'DESC']],
+    });
+
+    return { success: true, data: services };
+  } catch (error) {
+    console.error('getTicketServices error:', error);
+    return { success: false, message: 'Error fetching ticket services' };
+  }
+};
+
+export const getTicketServiceById = async (ticketId: number, id: number) => {
+  try {
+    const service = await TicketServiceModel.findOne({
+      where: { id, ticket_id: ticketId },
+    });
+    if (!service) return { success: false, message: 'Ticket service not found' };
+
+    return { success: true, data: service };
+  } catch (error) {
+    console.error('getTicketServiceById error:', error);
+    return { success: false, message: 'Error fetching ticket service' };
+  }
+};
+
+export const updateTicketService = async (ticketId: number, id: number, updates: UpdateTicketServiceInput) => {
+  try {
+    const service = await TicketServiceModel.findOne({
+      where: { id, ticket_id: ticketId },
+    });
+    if (!service) return { success: false, message: 'Ticket service not found' };
+
+    const payload: any = { ...updates };
+    if (updates.service_date !== undefined) {
+      payload.service_date = parseDate(updates.service_date);
+    }
+
+    await service.update(payload);
+
+    return { success: true, data: service };
+  } catch (error) {
+    console.error('updateTicketService error:', error);
+    return { success: false, message: 'Error updating ticket service' };
+  }
+};
+
+export const deleteTicketService = async (ticketId: number, id: number) => {
+  try {
+    const service = await TicketServiceModel.findOne({
+      where: { id, ticket_id: ticketId },
+    });
+    if (!service) return { success: false, message: 'Ticket service not found' };
+
+    await service.destroy();
+    return { success: true, message: 'Ticket service deleted' };
+  } catch (error) {
+    console.error('deleteTicketService error:', error);
+    return { success: false, message: 'Error deleting ticket service' };
   }
 };

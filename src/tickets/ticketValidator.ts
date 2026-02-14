@@ -69,3 +69,61 @@ export const listTicketsSchema = Joi.object({
 export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });
+
+const serviceDateSchema = Joi.string()
+  .pattern(/^\d{2}-\d{2}-\d{4}$/)
+  .optional()
+  .allow(null, '')
+  .custom((value, helpers) => {
+    if (value == null || value === '') return value;
+    const [d, m, y] = value.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    if (isNaN(date.getTime()) || date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+      return helpers.error('date.invalid');
+    }
+    return value;
+  }, 'dd-mm-yyyy date validation')
+  .messages({ 'date.invalid': 'service_date must be a valid date in dd-mm-yyyy format' });
+
+export const ticketServiceParamSchema = Joi.object({
+  ticketId: Joi.number().integer().positive().required(),
+});
+
+export const ticketServiceIdParamSchema = Joi.object({
+  ticketId: Joi.number().integer().positive().required(),
+  serviceId: Joi.number().integer().positive().required(),
+});
+
+export const createTicketServiceSchema = Joi.object({
+  customer_name: Joi.string().min(1).max(255).required().messages({
+    'string.empty': 'customer_name is required',
+  }),
+  email: Joi.string().email().max(255).optional().allow(null, ''),
+  phone: Joi.string().max(30).optional().allow(null, ''),
+  service_date: serviceDateSchema,
+  service_address: Joi.string().min(1).max(2000).required().messages({
+    'string.empty': 'service_address is required',
+  }),
+  service_type: Joi.string().max(100).optional().default('Repair'),
+  technician_name: Joi.string().max(255).optional().allow(null, ''),
+  equipment_type: Joi.string().max(255).optional().allow(null, ''),
+  equipment_model: Joi.string().max(255).optional().allow(null, ''),
+  work_performed: Joi.string().max(5000).optional().allow(null, ''),
+  parts_used: Joi.string().max(5000).optional().allow(null, ''),
+  labor_hours: Joi.number().min(0).optional().default(0),
+});
+
+export const updateTicketServiceSchema = Joi.object({
+  customer_name: Joi.string().min(1).max(255).optional(),
+  email: Joi.string().email().max(255).optional().allow(null, ''),
+  phone: Joi.string().max(30).optional().allow(null, ''),
+  service_date: serviceDateSchema,
+  service_address: Joi.string().min(1).max(2000).optional(),
+  service_type: Joi.string().max(100).optional(),
+  technician_name: Joi.string().max(255).optional().allow(null, ''),
+  equipment_type: Joi.string().max(255).optional().allow(null, ''),
+  equipment_model: Joi.string().max(255).optional().allow(null, ''),
+  work_performed: Joi.string().max(5000).optional().allow(null, ''),
+  parts_used: Joi.string().max(5000).optional().allow(null, ''),
+  labor_hours: Joi.number().min(0).optional(),
+}).min(1);

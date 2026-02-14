@@ -1,11 +1,27 @@
 import { Router } from 'express';
-import { create, list, getById, statusHistory, update, remove } from './ticketController';
+import {
+  create,
+  list,
+  getById,
+  statusHistory,
+  update,
+  remove,
+  createService,
+  listServices,
+  getServiceById,
+  updateService,
+  removeService,
+} from './ticketController';
 import validateRequest from '../middlewares/validateRequest';
 import {
   createTicketSchema,
   updateTicketSchema,
   listTicketsSchema,
   idParamSchema,
+  ticketServiceParamSchema,
+  ticketServiceIdParamSchema,
+  createTicketServiceSchema,
+  updateTicketServiceSchema,
 } from './ticketValidator';
 
 const router = Router();
@@ -21,5 +37,21 @@ router.put(
   update
 );
 router.delete('/:id', validateRequest(idParamSchema, 'params'), remove);
+
+router.post(
+  '/:ticketId/services',
+  validateRequest(ticketServiceParamSchema, 'params'),
+  validateRequest(createTicketServiceSchema, 'body'),
+  createService
+);
+router.get('/:ticketId/services', validateRequest(ticketServiceParamSchema, 'params'), listServices);
+router.get('/:ticketId/services/:serviceId', validateRequest(ticketServiceIdParamSchema, 'params'), getServiceById);
+router.put(
+  '/:ticketId/services/:serviceId',
+  validateRequest(ticketServiceIdParamSchema, 'params'),
+  validateRequest(updateTicketServiceSchema, 'body'),
+  updateService
+);
+router.delete('/:ticketId/services/:serviceId', validateRequest(ticketServiceIdParamSchema, 'params'), removeService);
 
 export default router;

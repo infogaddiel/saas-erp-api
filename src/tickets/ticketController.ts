@@ -6,6 +6,11 @@ import {
   getTicketStatusHistory,
   updateTicket,
   deleteTicket,
+  createTicketService,
+  getTicketServices,
+  getTicketServiceById,
+  updateTicketService,
+  deleteTicketService,
 } from './ticketService';
 
 const getUserId = (req: Request): number | null => {
@@ -139,6 +144,84 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete ticket controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const createService = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId, 10);
+    const result = await createTicketService({
+      ticket_id: ticketId,
+      ...req.body,
+    });
+
+    if (!result.success) {
+      const status = result.message === 'Ticket not found' ? 404 : 500;
+      return res.status(status).json(result);
+    }
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Create ticket service controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const listServices = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId, 10);
+    const result = await getTicketServices(ticketId);
+    if (!result.success) {
+      const status = result.message === 'Ticket not found' ? 404 : 500;
+      return res.status(status).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('List ticket services controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const getServiceById = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId, 10);
+    const id = parseInt(req.params.serviceId, 10);
+    const result = await getTicketServiceById(ticketId, id);
+    if (!result.success) return res.status(404).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Get ticket service controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const updateService = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId, 10);
+    const id = parseInt(req.params.serviceId, 10);
+    const result = await updateTicketService(ticketId, id, req.body);
+    if (!result.success) return res.status(404).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Update ticket service controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const removeService = async (req: Request, res: Response) => {
+  try {
+    const ticketId = parseInt(req.params.ticketId, 10);
+    const id = parseInt(req.params.serviceId, 10);
+    const result = await deleteTicketService(ticketId, id);
+    if (!result.success) return res.status(404).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Delete ticket service controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

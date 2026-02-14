@@ -8,6 +8,7 @@ import Permission from './Permission';
 import Ticket from './Ticket';
 import TicketStatus from './TicketStatus';
 import TicketStatusHistory from './TicketStatusHistory';
+import TicketService from './TicketService';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -60,4 +61,8 @@ TicketStatus.hasMany(TicketStatusHistory, { foreignKey: 'status_id', as: 'histor
 TicketStatusHistory.belongsTo(User, { foreignKey: 'changed_by', as: 'changedBy' });
 User.hasMany(TicketStatusHistory, { foreignKey: 'changed_by', as: 'ticketStatusChanges' });
 
-export { User, Company, Role, Customer, Menu, Item, Permission, Ticket, TicketStatus, TicketStatusHistory };
+// TicketService - Ticket
+TicketService.belongsTo(Ticket, { foreignKey: 'ticket_id', as: 'ticket' });
+Ticket.hasMany(TicketService, { foreignKey: 'ticket_id', as: 'services' });
+
+export { User, Company, Role, Customer, Menu, Item, Permission, Ticket, TicketStatus, TicketStatusHistory, TicketService };
