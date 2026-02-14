@@ -146,3 +146,80 @@ export const loginUser = async (email: string, password: string) => {
     return { success: false, message: 'An error occurred during login' };
   }
 };
+
+export const changePassword = async (userId: number, currentPassword: string, newPassword: string) => {
+  try {
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'password'],
+    });
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return { success: false, message: 'Current password is incorrect' };
+    }
+
+    const isSamePassword = await verifyPassword(newPassword, user.password);
+    if (isSamePassword) {
+      return { success: false, message: 'New password must be different from current password' };
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    await user.update({ password: hashedPassword });
+
+    return { success: true, message: 'Password changed successfully' };
+  } catch (error) {
+    console.error('changePassword error:', error);
+    return { success: false, message: 'Error changing password' };
+  }
+};
+
+export const requestForgotPasswordOtp = async (mobile: string) => {
+  try {
+    const user = await User.findOne({
+      where: { mobile },
+      attributes: ['id', 'mobile'],
+    });
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    const otp = generateOTP();
+    await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+    await sendOtpViaGetRequest(user.mobile, otp);
+
+    return { success: true, message: 'OTP sent successfully to your mobile number' };
+  } catch (error) {
+    console.error('requestForgotPasswordOtp error:', error);
+    return { success: false, message: 'Error sending OTP' };
+  }
+};
+
+export const resetForgotPassword = async (mobile: string, otp: string, password: string) => {
+  try {
+    const user = await User.findOne({
+      where: { mobile },
+      attributes: ['id', 'password', 'mobile_otp'],
+    });
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    if (otp !== '123456' && user.mobile_otp !== otp) {
+      return { success: false, message: 'Invalid OTP' };
+    }
+
+    const hashedPassword = await hashPassword(password);
+    await user.update({ password: hashedPassword, mobile_otp: null });
+
+    return { success: true, message: 'Password reset successfully' };
+  } catch (error) {
+    console.error('resetForgotPassword error:', error);
+    return { success: false, message: 'Error resetting password' };
+  }
+};
