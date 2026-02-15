@@ -2,11 +2,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, Permission, Menu, Role } from '../models';
 import { sendOtpViaGetRequest } from '../utils/otpGateway';
+import { Op } from 'sequelize';
 
-export const getRoles = async () => {
+export const getRoles = async (roleId: number) => {
   try {
     const roles = await Role.findAll({
-      where: { is_active: true },
+      where: { is_active: true, id: {[ Op.gt]: roleId }},
       attributes: ['id', 'type', 'company_id'],
       order: [['id', 'ASC']],
     });

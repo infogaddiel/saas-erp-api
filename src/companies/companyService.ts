@@ -5,6 +5,7 @@ interface CompanyPayload {
   name: string;
   address?: string | null;
   contract?: string | null;
+  website_url?: string | null;
   logo?: string | null;
   email?: string | null;
   mobile?: string | null;
@@ -39,6 +40,7 @@ export const createCompany = async (data: CompanyPayload) => {
       name: data.name,
       address: data.address ?? null,
       contract: data.contract ?? null,
+      website_url: data.website_url ?? null,
       logo: data.logo ?? null,
       email: data.email ?? null,
       mobile: data.mobile ?? null,

@@ -6,6 +6,7 @@ class Company extends Model {
   public name!: string;
   public address!: string | null;
   public contract!: string | null;
+  public website_url!: string | null;
   public logo!: string | null;
   public email!: string | null;
   public mobile!: string | null;
@@ -61,6 +62,10 @@ Company.init(
     },
     contract: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    website_url: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     logo: {
