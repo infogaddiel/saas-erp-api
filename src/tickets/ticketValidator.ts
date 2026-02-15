@@ -95,6 +95,7 @@ export const ticketServiceIdParamSchema = Joi.object({
 });
 
 export const createTicketServiceSchema = Joi.object({
+  customer_id: Joi.number().integer().positive().optional().allow(null),
   customer_name: Joi.string().min(1).max(255).required().messages({
     'string.empty': 'customer_name is required',
   }),
@@ -111,9 +112,14 @@ export const createTicketServiceSchema = Joi.object({
   work_performed: Joi.string().max(5000).optional().allow(null, ''),
   parts_used: Joi.string().max(5000).optional().allow(null, ''),
   labor_hours: Joi.number().min(0).optional().default(0),
+  photos: Joi.array().items(Joi.string()).optional().default([]),
+  video: Joi.string().optional().allow(null, ''),
+  customer_signature: Joi.string().optional().allow(null, ''),
+  report_status: Joi.string().max(50).optional().default('Draft'),
 });
 
 export const updateTicketServiceSchema = Joi.object({
+  customer_id: Joi.number().integer().positive().optional().allow(null),
   customer_name: Joi.string().min(1).max(255).optional(),
   email: Joi.string().email().max(255).optional().allow(null, ''),
   phone: Joi.string().max(30).optional().allow(null, ''),
@@ -126,4 +132,8 @@ export const updateTicketServiceSchema = Joi.object({
   work_performed: Joi.string().max(5000).optional().allow(null, ''),
   parts_used: Joi.string().max(5000).optional().allow(null, ''),
   labor_hours: Joi.number().min(0).optional(),
+  photos: Joi.array().items(Joi.string()).optional().allow(null),
+  video: Joi.string().optional().allow(null, ''),
+  customer_signature: Joi.string().optional().allow(null, ''),
+  report_status: Joi.string().max(50).optional(),
 }).min(1);

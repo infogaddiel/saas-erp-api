@@ -42,6 +42,10 @@ interface CreateTicketServiceInput {
   work_performed?: string | null;
   parts_used?: string | null;
   labor_hours?: number;
+  photos?: string[] | null;
+  video?: string | null;
+  customer_signature?: string | null;
+  report_status?: string;
 }
 
 interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> {}
@@ -292,6 +296,12 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
     const ticket = await Ticket.findByPk(data.ticket_id);
     if (!ticket) return { success: false, message: 'Ticket not found' };
 
+    const photoList = Array.isArray(data.photos) ? data.photos : [];
+    const video = data.video && data.video.trim() !== '' ? data.video : null;
+    const customerSignature =
+      data.customer_signature && data.customer_signature.trim() !== '' ? data.customer_signature : null;
+    const reportStatus = data.report_status && data.report_status.trim() !== '' ? data.report_status : 'Draft';
+
     const created = await TicketServiceModel.create({
       ticket_id: data.ticket_id,
       customer_id: data.customer_id,
@@ -306,6 +316,10 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       work_performed: data.work_performed ?? null,
       parts_used: data.parts_used ?? null,
       labor_hours: data.labor_hours ?? 0,
+      photos: photoList,
+      video,
+      customer_signature: customerSignature,
+      report_status: reportStatus,
     });
 
     return { success: true, data: created };
@@ -356,6 +370,9 @@ export const updateTicketService = async (ticketId: number, id: number, updates:
     const payload: any = { ...updates };
     if (updates.service_date !== undefined) {
       payload.service_date = parseDate(updates.service_date);
+    }
+    if (updates.photos !== undefined) {
+      payload.photos = Array.isArray(updates.photos) ? updates.photos : [];
     }
 
     await service.update(payload);
