@@ -10,6 +10,7 @@ import {
   deleteTicket,
   createTicketService,
   getTicketServices,
+  getTicketServicesByCompany,
   getTicketServiceById,
   updateTicketService,
   deleteTicketService,
@@ -216,6 +217,27 @@ export const listServices = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('List ticket services controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const listAllServices = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt((req.query.page as string) || '1', 10);
+    const limit = parseInt((req.query.limit as string) || '20', 10);
+    const rawCompanyId = req.user?.company_id;
+    const companyId = rawCompanyId == null ? null : parseInt(String(rawCompanyId), 10);
+
+    if (companyId == null || Number.isNaN(companyId)) {
+      return res.status(400).json({ success: false, message: 'User company not found' });
+    }
+
+    const result = await getTicketServicesByCompany(companyId, page, limit);
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('List all ticket services controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

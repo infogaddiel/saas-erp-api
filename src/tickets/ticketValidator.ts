@@ -66,6 +66,11 @@ export const listTicketsSchema = Joi.object({
   customer_id: Joi.number().integer().positive().optional(),
 });
 
+export const listTicketServicesSchema = Joi.object({
+  page: Joi.number().integer().min(1).optional().default(1),
+  limit: Joi.number().integer().min(1).max(100).optional().default(20),
+});
+
 export const ticketDropdownSchema = Joi.object({
   ticket_number: Joi.string().max(50).optional().allow(''),
   customer_id: Joi.number().integer().positive().optional(),

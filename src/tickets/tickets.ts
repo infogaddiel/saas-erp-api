@@ -10,6 +10,7 @@ import {
   remove,
   createService,
   listServices,
+  listAllServices,
   getServiceById,
   updateService,
   removeService,
@@ -19,6 +20,7 @@ import {
   createTicketSchema,
   updateTicketSchema,
   listTicketsSchema,
+  listTicketServicesSchema,
   ticketDropdownSchema,
   idParamSchema,
   ticketServiceParamSchema,
@@ -33,6 +35,7 @@ router.post('/', validateRequest(createTicketSchema, 'body'), create);
 router.get('/', validateRequest(listTicketsSchema, 'query'), list);
 router.get('/dropdown', validateRequest(ticketDropdownSchema, 'query'), dropdown);
 router.get('/statuses', statuses);
+router.get('/services', validateRequest(listTicketServicesSchema, 'query'), listAllServices);
 router.get('/:id/status-history', validateRequest(idParamSchema, 'params'), statusHistory);
 router.get('/:id', validateRequest(idParamSchema, 'params'), getById);
 router.put(

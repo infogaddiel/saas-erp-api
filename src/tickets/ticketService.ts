@@ -483,6 +483,57 @@ export const getTicketServices = async (ticketId: number) => {
   }
 };
 
+export const getTicketServicesByCompany = async (companyId: number, page = 1, limit = 20) => {
+  try {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await TicketServiceModel.findAndCountAll({
+      offset,
+      limit,
+      order: [['id', 'DESC']],
+      include: [
+        {
+          model: Ticket,
+          as: 'ticket',
+          attributes: ['id', 'ticket_number', 'service_type', 'priority', 'status_id', 'customer_id'],
+          required: true,
+          include: [
+            {
+              model: User,
+              as: 'createdBy',
+              attributes: [],
+              required: true,
+              where: { company_id: companyId },
+            },
+          ],
+        },
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
+        { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+      ],
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      success: true,
+      data: {
+        services: rows,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('getTicketServicesByCompany error:', error);
+    return { success: false, message: 'Error fetching ticket services' };
+  }
+};
+
 export const getTicketServiceById = async (ticketId: number, id: number) => {
   try {
     const service = await TicketServiceModel.findOne({
