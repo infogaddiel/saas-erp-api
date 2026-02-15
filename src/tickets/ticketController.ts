@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   createTicket,
   getTickets,
+  getTicketsForDropdown,
   getTicketById,
   getTicketStatuses,
   getTicketStatusHistory,
@@ -101,6 +102,28 @@ export const getById = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Get ticket controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const ticket_number = (req.query.ticket_number as string) || undefined;
+    const customer_id = req.query.customer_id ? parseInt(req.query.customer_id as string, 10) : undefined;
+    const company_id = req.user?.company_id ?? null;
+
+    const result = await getTicketsForDropdown(company_id, {
+      ticket_number,
+      customer_id,
+    });
+    if (!result.success) {
+      const status = result.message === 'User company not found' ? 400 : 500;
+      return res.status(status).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown tickets controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

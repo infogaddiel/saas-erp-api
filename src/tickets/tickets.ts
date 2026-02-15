@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   create,
   list,
+  dropdown,
   statuses,
   getById,
   statusHistory,
@@ -18,6 +19,7 @@ import {
   createTicketSchema,
   updateTicketSchema,
   listTicketsSchema,
+  ticketDropdownSchema,
   idParamSchema,
   ticketServiceParamSchema,
   ticketServiceIdParamSchema,
@@ -29,6 +31,7 @@ const router = Router();
 
 router.post('/', validateRequest(createTicketSchema, 'body'), create);
 router.get('/', validateRequest(listTicketsSchema, 'query'), list);
+router.get('/dropdown', validateRequest(ticketDropdownSchema, 'query'), dropdown);
 router.get('/statuses', statuses);
 router.get('/:id/status-history', validateRequest(idParamSchema, 'params'), statusHistory);
 router.get('/:id', validateRequest(idParamSchema, 'params'), getById);

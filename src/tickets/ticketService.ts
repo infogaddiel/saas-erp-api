@@ -246,6 +246,61 @@ export const getTickets = async (
   }
 };
 
+export const getTicketsForDropdown = async (
+  companyId: number | null | undefined,
+  filters?: {
+    ticket_number?: string;
+    customer_id?: number;
+  }
+) => {
+  try {
+    const where: any = {};
+    const ticketNumber = filters?.ticket_number?.trim();
+
+    if (ticketNumber) {
+      where.ticket_number = { [Op.iLike]: `%${ticketNumber}%` };
+    }
+    if (filters?.customer_id != null) {
+      where.customer_id = filters.customer_id;
+    }
+
+    const customerInclude: any = {
+      model: Customer,
+      as: 'customer',
+      attributes: ['id', 'name'],
+      required: true,
+    };
+
+    if (filters?.customer_id == null) {
+      if (!companyId) return { success: false, message: 'User company not found' };
+      customerInclude.include = [
+        {
+          model: User,
+          as: 'createdBy',
+          attributes: [],
+          required: true,
+          where: { company_id: companyId },
+        },
+      ];
+    }
+
+    const tickets = await Ticket.findAll({
+      attributes: ['id', 'ticket_number', 'customer_id'],
+      where,
+      include: [customerInclude],
+      order: [
+        ['ticket_number', 'ASC'],
+        ['id', 'DESC'],
+      ],
+    });
+
+    return { success: true, data: tickets };
+  } catch (error) {
+    console.error('getTicketsForDropdown error:', error);
+    return { success: false, message: 'Error fetching tickets for dropdown' };
+  }
+};
+
 export const getTicketById = async (id: number) => {
   try {
     const ticket = await Ticket.findByPk(id, {
