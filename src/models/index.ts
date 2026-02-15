@@ -67,5 +67,7 @@ Ticket.hasMany(TicketService, { foreignKey: 'ticket_id', as: 'services' });
 
 TicketService.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 Customer.hasMany(TicketService, { foreignKey: 'customer_id', as: 'ticketServices' });
+TicketService.belongsTo(User, { foreignKey: 'user_id', as: 'technician' });
+User.hasMany(TicketService, { foreignKey: 'user_id', as: 'ticketServices' });
 
 export { User, Company, Role, Customer, Menu, Item, Permission, Ticket, TicketStatus, TicketStatusHistory, TicketService };

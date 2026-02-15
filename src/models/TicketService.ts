@@ -11,7 +11,7 @@ class TicketService extends Model {
   public service_date!: Date | null;
   public service_address!: string;
   public service_type!: string;
-  public technician_name!: string | null;
+  public user_id!: number | null;
   public equipment_type!: string | null;
   public equipment_model!: string | null;
   public work_performed!: string | null;
@@ -77,9 +77,15 @@ TicketService.init(
       allowNull: false,
       defaultValue: 'Repair',
     },
-    technician_name: {
-      type: DataTypes.STRING(255),
+    user_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
     },
     equipment_type: {
       type: DataTypes.STRING(255),

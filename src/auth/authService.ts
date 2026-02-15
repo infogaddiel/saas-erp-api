@@ -9,7 +9,7 @@ export const getRoles = async (roleId: number) => {
     const roles = await Role.findAll({
       where: { is_active: true, id: {[ Op.gt]: roleId }},
       attributes: ['id', 'type', 'company_id'],
-      order: [['id', 'ASC']],
+      order: [['level', 'ASC']],
     });
 
     return { success: true, data: roles };

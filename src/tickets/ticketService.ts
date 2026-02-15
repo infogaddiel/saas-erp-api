@@ -31,13 +31,14 @@ interface UpdateTicketInput extends Partial<CreateTicketInput> {
 
 interface CreateTicketServiceInput {
   ticket_id: number;
-  customer_id: number;
+  customer_id?: number | null;
+  customer_name: string;
   email?: string | null;
   phone?: string | null;
   service_date?: string | null;
   service_address: string;
   service_type?: string;
-  technician_name?: string | null;
+  user_id?: number | null;
   equipment_type?: string | null;
   equipment_model?: string | null;
   work_performed?: string | null;
@@ -361,6 +362,10 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
   try {
     const ticket = await Ticket.findByPk(data.ticket_id);
     if (!ticket) return { success: false, message: 'Ticket not found' };
+    if (data.user_id != null) {
+      const technician = await User.findByPk(data.user_id);
+      if (!technician) return { success: false, message: 'User not found' };
+    }
 
     const photoList = Array.isArray(data.photos) ? data.photos : [];
     const video = data.video && data.video.trim() !== '' ? data.video : null;
@@ -370,13 +375,14 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
 
     const created = await TicketServiceModel.create({
       ticket_id: data.ticket_id,
-      customer_id: data.customer_id,
+      customer_id: data.customer_id ?? null,
+      customer_name: data.customer_name,
       email: data.email ?? null,
       phone: data.phone ?? null,
       service_date: parseDate(data.service_date ?? undefined),
       service_address: data.service_address,
       service_type: data.service_type ?? 'Repair',
-      technician_name: data.technician_name ?? null,
+      user_id: data.user_id ?? null,
       equipment_type: data.equipment_type ?? null,
       equipment_model: data.equipment_model ?? null,
       work_performed: data.work_performed ?? null,
@@ -403,6 +409,10 @@ export const getTicketServices = async (ticketId: number) => {
     const services = await TicketServiceModel.findAll({
       where: { ticket_id: ticketId },
       order: [['id', 'DESC']],
+      include: [
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
+        { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+      ],
     });
 
     return { success: true, data: services };
@@ -416,6 +426,10 @@ export const getTicketServiceById = async (ticketId: number, id: number) => {
   try {
     const service = await TicketServiceModel.findOne({
       where: { id, ticket_id: ticketId },
+      include: [
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
+        { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+      ],
     });
     if (!service) return { success: false, message: 'Ticket service not found' };
 
@@ -434,6 +448,10 @@ export const updateTicketService = async (ticketId: number, id: number, updates:
     if (!service) return { success: false, message: 'Ticket service not found' };
 
     const payload: any = { ...updates };
+    if (updates.user_id !== undefined && updates.user_id !== null) {
+      const technician = await User.findByPk(updates.user_id);
+      if (!technician) return { success: false, message: 'User not found' };
+    }
     if (updates.service_date !== undefined) {
       payload.service_date = parseDate(updates.service_date);
     }
