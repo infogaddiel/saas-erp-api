@@ -118,7 +118,7 @@ export const deleteItem = async (id: number) => {
     const item = await Item.findByPk(id);
     if (!item) return { success: false, message: 'Item not found' };
 
-    await item.destroy();
+    await item.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'Item deleted' };
   } catch (error) {
     console.error('deleteItem error:', error);

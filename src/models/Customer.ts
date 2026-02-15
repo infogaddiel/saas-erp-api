@@ -10,6 +10,7 @@ class Customer extends Model {
   public type!: 'Individual' | 'Company';
   public status!: boolean;
   public created_by!: number | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -54,6 +55,10 @@ Customer.init(
         key: 'id',
       },
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -69,6 +74,11 @@ Customer.init(
     sequelize,
     tableName: 'customers',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

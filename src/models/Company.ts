@@ -33,6 +33,7 @@ class Company extends Model {
   public pan_certificate_renewal_date!: Date | null;
   public pan_certificate_renewal_amount!: number | null;
   public pan_certificate_renewal_status!: string | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -165,6 +166,10 @@ Company.init(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -180,6 +185,11 @@ Company.init(
     sequelize,
     tableName: 'company',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

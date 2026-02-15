@@ -405,7 +405,13 @@ export const deleteTicket = async (id: number) => {
     const ticket = await Ticket.findByPk(id);
     if (!ticket) return { success: false, message: 'Ticket not found' };
 
-    await ticket.destroy();
+    await sequelize.transaction(async (transaction) => {
+      await ticket.update({ deleted_at: new Date() } as any, { transaction });
+      await TicketServiceModel.update(
+        { deleted_at: new Date() } as any,
+        { where: { ticket_id: id }, transaction }
+      );
+    });
     return { success: true, message: 'Ticket deleted' };
   } catch (error) {
     console.error('deleteTicket error:', error);
@@ -530,7 +536,7 @@ export const deleteTicketService = async (ticketId: number, id: number) => {
     });
     if (!service) return { success: false, message: 'Ticket service not found' };
 
-    await service.destroy();
+    await service.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'Ticket service deleted' };
   } catch (error) {
     console.error('deleteTicketService error:', error);

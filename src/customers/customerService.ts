@@ -103,7 +103,7 @@ export const deleteCustomer = async (id: number) => {
     const customer = await Customer.findByPk(id);
     if (!customer) return { success: false, message: 'Customer not found' };
 
-    await customer.destroy();
+    await customer.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'Customer deleted' };
   } catch (error) {
     console.error('deleteCustomer error:', error);

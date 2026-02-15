@@ -13,6 +13,7 @@ class User extends Model {
   public role_id!: number | null;
   public blocked!: boolean;
   public mobile_otp!: string | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 } 
@@ -71,6 +72,10 @@ User.init(
       type: DataTypes.STRING(6),
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -86,6 +91,11 @@ User.init(
     sequelize,
     tableName: 'users',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

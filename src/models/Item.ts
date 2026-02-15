@@ -16,6 +16,7 @@ class Item extends Model {
   public notes!: string | null;
   public status!: boolean;
   public created_by!: number | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -84,12 +85,21 @@ Item.init(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'items',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

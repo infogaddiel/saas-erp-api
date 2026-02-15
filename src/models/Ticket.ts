@@ -15,6 +15,7 @@ class Ticket extends Model {
   public equipment_model!: string | null;
   public issue_description!: string;
   public created_by!: number | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -80,12 +81,21 @@ Ticket.init(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'tickets',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

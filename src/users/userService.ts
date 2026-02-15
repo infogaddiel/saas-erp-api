@@ -203,7 +203,7 @@ export const deleteUser = async (id: number) => {
     const user = await User.findByPk(id);
     if (!user) return { success: false, message: 'User not found' };
 
-    await user.destroy();
+    await user.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'User deleted' };
   } catch (error) {
     console.error('deleteUser error:', error);

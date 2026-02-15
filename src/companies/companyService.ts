@@ -137,7 +137,7 @@ export const deleteCompany = async (id: number) => {
     const company = await Company.findByPk(id);
     if (!company) return { success: false, message: 'Company not found' };
 
-    await company.destroy();
+    await company.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'Company deleted' };
   } catch (error) {
     console.error('deleteCompany error:', error);

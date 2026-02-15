@@ -21,6 +21,7 @@ class TicketService extends Model {
   public video!: string | null;
   public customer_signature!: string | null;
   public report_status!: string;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -126,12 +127,21 @@ TicketService.init(
       allowNull: false,
       defaultValue: 'Draft',
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'ticket_services',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 
