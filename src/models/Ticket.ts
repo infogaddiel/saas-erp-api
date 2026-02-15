@@ -3,6 +3,7 @@ import sequelize from '../config/database';
 
 class Ticket extends Model {
   public id!: number;
+  public ticket_number!: string | null;
   public customer_id!: number;
   public status_id!: number;
   public service_address!: string;
@@ -24,6 +25,11 @@ Ticket.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    ticket_number: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
     },
     customer_id: {
       type: DataTypes.INTEGER,

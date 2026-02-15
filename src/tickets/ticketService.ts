@@ -1,5 +1,6 @@
 import sequelize from '../config/database';
-import { Ticket, User, Customer, TicketStatus, TicketStatusHistory, TicketService as TicketServiceModel } from '../models';
+import { Op, UniqueConstraintError } from 'sequelize';
+import { Ticket, User, Customer, Company, TicketStatus, TicketStatusHistory, TicketService as TicketServiceModel } from '../models';
 
 /** Convert dd-mm-yyyy to YYYY-MM-DD for DATEONLY storage */
 function parseScheduledDate(value: string | null | undefined): string | null {
@@ -51,6 +52,8 @@ interface CreateTicketServiceInput {
 interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> {}
 
 const OPEN_STATUS_NAME = 'Open';
+const DEFAULT_TICKET_PREFIX = 'TKT';
+const TICKET_NUMBER_PADDING = 5;
 
 async function getOpenStatusId(transaction?: any): Promise<number | null> {
   const [status] = await TicketStatus.findOrCreate({
@@ -63,6 +66,54 @@ async function getOpenStatusId(transaction?: any): Promise<number | null> {
 
 function parseDate(value: string | null | undefined): string | null {
   return parseScheduledDate(value);
+}
+
+function getCompanyPrefix(companyName: string | null | undefined): string {
+  if (!companyName) return DEFAULT_TICKET_PREFIX;
+  const normalized = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length === 0) return DEFAULT_TICKET_PREFIX;
+  return normalized.slice(0, 3).padEnd(3, 'X');
+}
+
+async function getCompanyPrefixByUserId(userId: number | null | undefined, transaction?: any): Promise<string> {
+  if (!userId) return DEFAULT_TICKET_PREFIX;
+
+  const user = await User.findByPk(userId, {
+    attributes: ['id', 'company_id'],
+    include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
+    transaction,
+  });
+
+  const companyName = (user as any)?.company?.name as string | undefined;
+  return getCompanyPrefix(companyName);
+}
+
+async function generateNextTicketNumber(createdBy: number | null | undefined, transaction?: any): Promise<string> {
+  const prefix = await getCompanyPrefixByUserId(createdBy, transaction);
+
+  const latestTicket = await Ticket.findOne({
+    where: {
+      ticket_number: {
+        [Op.like]: `${prefix}%`,
+      },
+    },
+    attributes: ['ticket_number'],
+    order: [['id', 'DESC']],
+    transaction,
+    lock: transaction ? transaction.LOCK.UPDATE : undefined,
+  });
+
+  let nextSequence = 1;
+  const currentNumber = latestTicket?.ticket_number;
+  if (currentNumber) {
+    const match = currentNumber.match(new RegExp(`^${prefix}(\\d+)$`));
+    if (match) {
+      const parsed = parseInt(match[1], 10);
+      if (!Number.isNaN(parsed)) nextSequence = parsed + 1;
+    }
+  }
+
+  return `${prefix}${String(nextSequence).padStart(TICKET_NUMBER_PADDING, '0')}`;
 }
 
 async function createTicketStatusHistory(
@@ -83,30 +134,45 @@ async function createTicketStatusHistory(
 
 export const createTicket = async (data: CreateTicketInput) => {
   try {
-    const ticket = await sequelize.transaction(async (transaction) => {
-      const statusId = data.status_id ?? (await getOpenStatusId(transaction));
-      if (!statusId) throw new Error('Open ticket status not found');
+    let ticket: Ticket | null = null;
 
-      const createdTicket = await Ticket.create(
-        {
-          customer_id: data.customer_id,
-          status_id: statusId,
-          service_address: data.service_address,
-          priority: data.priority ?? 'Medium',
-          service_type: data.service_type,
-          assigned_technician_id: data.assigned_technician_id ?? null,
-          scheduled_date: parseScheduledDate(data.scheduled_date ?? undefined),
-          equipment_type: data.equipment_type ?? null,
-          equipment_model: data.equipment_model ?? null,
-          issue_description: data.issue_description,
-          created_by: data.created_by ?? null,
-        },
-        { transaction }
-      );
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        ticket = await sequelize.transaction(async (transaction) => {
+          const statusId = data.status_id ?? (await getOpenStatusId(transaction));
+          if (!statusId) throw new Error('Open ticket status not found');
 
-      await createTicketStatusHistory(createdTicket.id, statusId, data.created_by, transaction);
-      return createdTicket;
-    });
+          const ticketNumber = await generateNextTicketNumber(data.created_by, transaction);
+
+          const createdTicket = await Ticket.create(
+            {
+              ticket_number: ticketNumber,
+              customer_id: data.customer_id,
+              status_id: statusId,
+              service_address: data.service_address,
+              priority: data.priority ?? 'Medium',
+              service_type: data.service_type,
+              assigned_technician_id: data.assigned_technician_id ?? null,
+              scheduled_date: parseScheduledDate(data.scheduled_date ?? undefined),
+              equipment_type: data.equipment_type ?? null,
+              equipment_model: data.equipment_model ?? null,
+              issue_description: data.issue_description,
+              created_by: data.created_by ?? null,
+            },
+            { transaction }
+          );
+
+          await createTicketStatusHistory(createdTicket.id, statusId, data.created_by, transaction);
+          return createdTicket;
+        });
+        break;
+      } catch (error) {
+        const isUniqueViolation = error instanceof UniqueConstraintError;
+        if (!isUniqueViolation || attempt === 2) throw error;
+      }
+    }
+
+    if (!ticket) return { success: false, message: 'Error creating ticket' };
 
     const withAssociations = await Ticket.findByPk(ticket.id, {
       include: [
