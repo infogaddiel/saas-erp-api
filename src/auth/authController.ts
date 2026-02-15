@@ -52,7 +52,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 export const getRoles = async (req: Request, res: Response) => {
   try {
-    const roleId = (req as any)?.role_id;
+    const roleId = (req as any)?.user?.role_id;
     const result = await getRolesService(roleId);
     if (!result.success) return res.status(500).json(result);
     return res.status(200).json(result);

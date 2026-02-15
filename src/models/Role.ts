@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 class Role extends Model {
   public id!: number;
   public type!: string;
+  public level!: number;
   public is_active!: boolean;
   public company_id!: number | null;
   public readonly created_at!: Date;
@@ -20,6 +21,11 @@ Role.init(
     type: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    level: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     is_active: {
       type: DataTypes.BOOLEAN,

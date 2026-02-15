@@ -2,10 +2,16 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    const roles = ['Super Admin', 'Admin', 'Staff', 'Technician'];
+    const roles = [
+      { type: 'Super Admin', level: 1 },
+      { type: 'Admin', level: 2 },
+      { type: 'Staff', level: 3 },
+      { type: 'Technician', level: 4 },
+    ];
     const companyID = 1;
 
-    for (const type of roles) {
+    for (const role of roles) {
+      const { type, level } = role;
       const [results] = await queryInterface.sequelize.query(
         'SELECT id FROM roles WHERE type = ?',
         { replacements: [type] }
@@ -14,11 +20,21 @@ module.exports = {
       if (results.length === 0) {
         await queryInterface.bulkInsert('roles', [{
           type,
+          level,
           is_active: true,
           company_id: companyID,
           created_at: new Date(),
           updated_at: new Date(),
         }], {});
+      } else {
+        await queryInterface.bulkUpdate(
+          'roles',
+          {
+            level,
+            updated_at: new Date(),
+          },
+          { type }
+        );
       }
     }
   },
