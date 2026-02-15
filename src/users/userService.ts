@@ -1,4 +1,4 @@
-import { User, Company, Role, Permission, Menu } from '../models';
+import { User, Company, Role, Permission, Menu, Item, Customer, Ticket, TicketStatus } from '../models';
 import { hashPassword } from '../auth/authService';
 import { Op } from 'sequelize';
 
@@ -228,5 +228,73 @@ export const getUsersForDropdown = async (companyId: number, roleId?: number) =>
   } catch (error) {
     console.error('getUsersForDropdown error:', error);
     return { success: false, message: 'Error fetching users for dropdown' };
+  }
+};
+
+export const getDashboardSummary = async (companyId: number) => {
+  try {
+    const userCompanyInclude = [
+      {
+        model: User,
+        as: 'createdBy',
+        attributes: [],
+        where: { company_id: companyId },
+        required: true,
+      },
+    ];
+
+    const [totalItems, totalCustomers, statuses, ticketCountByStatusRaw] = await Promise.all([
+      Item.count({ include: userCompanyInclude as any }),
+      Customer.count({ include: userCompanyInclude as any }),
+      TicketStatus.findAll({
+        attributes: ['id', 'name'],
+        order: [['id', 'ASC']],
+      }),
+      Ticket.count({
+        include: [
+          {
+            model: Customer,
+            as: 'customer',
+            attributes: [],
+            required: true,
+            include: [
+              {
+                model: User,
+                as: 'createdBy',
+                attributes: [],
+                where: { company_id: companyId },
+                required: true,
+              },
+            ],
+          },
+        ],
+        group: ['status_id'],
+      }),
+    ]);
+
+    const countsMap = new Map<number, number>();
+    for (const row of ticketCountByStatusRaw as any[]) {
+      const statusId = Number(row.status_id);
+      const count = Number(row.count ?? 0);
+      countsMap.set(statusId, count);
+    }
+
+    const ticketCountsByStatus = statuses.map((status: any) => ({
+      status_id: status.id,
+      status_name: status.name,
+      count: countsMap.get(status.id) ?? 0,
+    }));
+
+    return {
+      success: true,
+      data: {
+        total_items: totalItems,
+        total_customers: totalCustomers,
+        ticket_counts_by_status: ticketCountsByStatus,
+      },
+    };
+  } catch (error) {
+    console.error('getDashboardSummary error:', error);
+    return { success: false, message: 'Error fetching dashboard summary' };
   }
 };

@@ -6,6 +6,7 @@ import {
   updateUser,
   deleteUser,
   getUsersForDropdown,
+  getDashboardSummary,
 } from './userService';
 
 export const create = async (req: Request, res: Response) => {
@@ -95,6 +96,23 @@ export const dropdown = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Dropdown users controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dashboard = async (req: Request, res: Response) => {
+  try {
+    const companyId = (req as any).user?.company_id;
+    if (!companyId) {
+      return res.status(400).json({ success: false, message: 'User company not found' });
+    }
+
+    const result = await getDashboardSummary(companyId);
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dashboard summary controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };
