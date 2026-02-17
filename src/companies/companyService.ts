@@ -4,11 +4,15 @@ import { Op } from 'sequelize';
 interface CompanyPayload {
   name: string;
   address?: string | null;
+  branch1_address?: string | null;
+  branch2_address?: string | null;
+  branch3_address?: string | null;
   contract?: string | null;
   website_url?: string | null;
   logo?: string | null;
   email?: string | null;
   mobile?: string | null;
+  other_mobile?: string | null;
   status?: boolean;
   license_number?: string | null;
   license_expiry_date?: Date | null;
@@ -49,11 +53,15 @@ export const createCompany = async (data: CompanyPayload) => {
     const company = await Company.create({
       name: data.name,
       address: data.address ?? null,
+      branch1_address: data.branch1_address ?? null,
+      branch2_address: data.branch2_address ?? null,
+      branch3_address: data.branch3_address ?? null,
       contract: data.contract ?? null,
       website_url: data.website_url ?? null,
       logo: data.logo ?? null,
       email: data.email ?? null,
       mobile: data.mobile ?? null,
+      other_mobile: data.other_mobile ?? null,
       status: data.status ?? true,
       license_number: data.license_number ?? null,
       license_expiry_date: data.license_expiry_date ?? null,
@@ -147,7 +155,16 @@ export const updateCompany = async (id: number, updates: Partial<CompanyPayload>
       }
     }
 
-    await company.update(updates as any);
+    const normalizedUpdates = {
+      ...updates,
+      ...(typeof updates.mobile !== 'undefined' ? { mobile: updates.mobile ?? null } : {}),
+      ...(typeof updates.other_mobile !== 'undefined' ? { other_mobile: updates.other_mobile ?? null } : {}),
+      ...(typeof updates.branch1_address !== 'undefined' ? { branch1_address: updates.branch1_address ?? null } : {}),
+      ...(typeof updates.branch2_address !== 'undefined' ? { branch2_address: updates.branch2_address ?? null } : {}),
+      ...(typeof updates.branch3_address !== 'undefined' ? { branch3_address: updates.branch3_address ?? null } : {}),
+    };
+
+    await company.update(normalizedUpdates as any);
     return { success: true, data: company };
   } catch (error) {
     console.error('updateCompany error:', error);

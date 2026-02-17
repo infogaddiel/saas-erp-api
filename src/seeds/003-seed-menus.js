@@ -4,8 +4,10 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     const menus = [
       { name: 'Dashboard', description: 'Main dashboard' },
-      { name: 'Users', description: 'User management' },
-      { name: 'Customers', description: 'Customer management' },
+      { name: 'Sales', description: 'Sales management' },
+      { name: 'Inventory', description: 'Inventory management' },
+      { name: 'Staff & Technician', description: 'Staff and technician management' },
+      { name: 'Ticket & Service', description: 'Ticket and service management' },
       { name: 'Settings', description: 'Application settings' },
     ];
 

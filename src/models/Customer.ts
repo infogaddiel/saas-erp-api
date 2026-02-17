@@ -7,6 +7,7 @@ class Customer extends Model {
   public mobile!: string | null;
   public email!: string | null;
   public address!: string | null;
+  public ship_address!: string | null;
   public type!: 'Individual' | 'Company';
   public customer_type_id!: number | null;
   public status!: boolean;
@@ -36,6 +37,10 @@ Customer.init(
       allowNull: true,
     },
     address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    ship_address: {
       type: DataTypes.TEXT,
       allowNull: true,
     },

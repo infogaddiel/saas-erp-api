@@ -5,11 +5,15 @@ class Company extends Model {
   public id!: number;
   public name!: string;
   public address!: string | null;
+  public branch1_address!: string | null;
+  public branch2_address!: string | null;
+  public branch3_address!: string | null;
   public contract!: string | null;
   public website_url!: string | null;
   public logo!: string | null;
   public email!: string | null;
   public mobile!: string | null;
+  public other_mobile!: string | null;
   public status!: boolean;
   public license_number!: string | null;
   public license_expiry_date!: Date | null;
@@ -52,6 +56,25 @@ Company.init(
     mobile: {
       type: DataTypes.STRING(15),
       allowNull: true,
+    },
+    other_mobile: {
+      type: DataTypes.STRING(15),
+      allowNull: true,
+    },
+    branch1_address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'branch1_adress',
+    },
+    branch2_address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'branch2_adress',
+    },
+    branch3_address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: 'branch3_adress',
     },
     email: {
       type: DataTypes.STRING(100),

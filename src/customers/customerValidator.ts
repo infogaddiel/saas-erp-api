@@ -5,6 +5,7 @@ export const createCustomerSchema = Joi.object({
   mobile: Joi.string().max(15).required(),
   email: Joi.string().email().max(255).required(),
   address: Joi.string().allow(null, '').optional(),
+  ship_address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
   customer_type_id: Joi.number().integer().positive().required(),
   status: Joi.boolean().optional()
@@ -15,6 +16,7 @@ export const updateCustomerSchema = Joi.object({
   mobile: Joi.string().max(15).optional(),
   email: Joi.string().email().max(255).optional(),
   address: Joi.string().allow(null, '').optional(),
+  ship_address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
   customer_type_id: Joi.number().integer().positive().required(),
   status: Joi.boolean().optional()
@@ -37,6 +39,7 @@ export const bulkCreateCustomersSchema = Joi.object({
         mobile: Joi.string().max(15).required(),
         email: Joi.string().email().max(255).required(),
         address: Joi.string().allow(null, '').optional(),
+        ship_address: Joi.string().allow(null, '').optional(),
         type: Joi.string().valid('Individual', 'Company').required(),
         customer_type_id: Joi.number().integer().positive().required(),
         status: Joi.boolean().optional(),

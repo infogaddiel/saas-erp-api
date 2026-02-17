@@ -7,6 +7,7 @@ interface CreateCustomerInput {
   mobile?: string | null;
   email?: string | null;
   address?: string | null;
+  ship_address?: string | null;
   type: 'Individual' | 'Company';
   customer_type_id?: number | null;
   status?: boolean;
@@ -53,6 +54,7 @@ export const createCustomer = async (data: CreateCustomerInput) => {
       mobile,
       email,
       address: data.address ?? null,
+      ship_address: data.ship_address ?? null,
       type: data.type,
       customer_type_id: data.customer_type_id ?? null,
       status: data.status ?? true,
@@ -202,6 +204,7 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
         mobile: data.mobile ?? null,
         email: data.email ?? null,
         address: data.address ?? null,
+        ship_address: data.ship_address ?? null,
         type: data.type,
         customer_type_id: data.customer_type_id ?? null,
         created_by: userId,
@@ -240,6 +243,7 @@ export const exportCustomersToExcel = async () => {
       { header: 'Mobile', key: 'mobile', width: 15 },
       { header: 'Email', key: 'email', width: 25 },
       { header: 'Address', key: 'address', width: 30 },
+      { header: 'Shipping Address', key: 'ship_address', width: 30 },
       { header: 'Type', key: 'type', width: 15 },
       { header: 'Customer Type', key: 'customerType', width: 20 },
       { header: 'Status', key: 'status', width: 10 },
@@ -256,6 +260,7 @@ export const exportCustomersToExcel = async () => {
         mobile: customer.mobile,
         email: customer.email,
         address: customer.address,
+        ship_address: customer.ship_address,
         type: customer.type,
         customerType: customer.customerType?.name || 'N/A',
         status: customer.status ? 'Active' : 'Inactive',
@@ -286,7 +291,7 @@ export const exportCustomersToExcel = async () => {
 export const getCustomersForDropdown = async (companyId: number,whereCondition:any = {}) => {
   try {
     const customers = await Customer.findAll({
-      attributes: ['id', 'name','mobile','email','address', 'customer_type_id'],
+      attributes: ['id', 'name','mobile','email','address', 'ship_address', 'customer_type_id'],
       where:whereCondition,
       include: [
         {

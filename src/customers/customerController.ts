@@ -27,13 +27,14 @@ declare global {
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const { name, mobile, email, address, type, customer_type_id, status } = req.body;
+    const { name, mobile, email, address, ship_address, type, customer_type_id, status } = req.body;
 
     const result = await createCustomer({
       name,
       mobile,
       email,
       address,
+      ship_address,
       type,
       customer_type_id,
       status,
