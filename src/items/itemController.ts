@@ -40,7 +40,7 @@ export const create = async (req: Request, res: Response) => {
       stock_quantity,
       notes,
       status,
-      created_by,
+      created_by: parseInt(req.user?.id as string),
     });
 
     if (!result.success) return res.status(500).json(result);
@@ -117,8 +117,8 @@ export const bulkCreate = async (req: Request, res: Response) => {
     if (!Array.isArray(items)) {
       return res.status(400).json({ success: false, message: 'Expected "items" array in body' });
     }
-
-    const result = await bulkCreateItems(items);
+    
+    const result = await bulkCreateItems(items,parseInt(req.user?.id as string));
     if (!result.success) return res.status(400).json(result);
 
     return res.status(201).json(result);
