@@ -1,9 +1,10 @@
 import Joi from 'joi';
 
 export const loginSchema = Joi.object({
-  email: Joi.string().max(100).required(),
+  email: Joi.string().email().max(100).optional().trim(),
+  mobile: Joi.string().max(15).optional().trim(),
   password: Joi.string().min(6).required(),
-});
+}).or('email', 'mobile');
 
 export const verifyOtpSchema = Joi.object({
   otp: Joi.string().length(6).required(),

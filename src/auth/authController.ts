@@ -11,9 +11,9 @@ import { any } from 'joi';
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, mobile, password } = req.body;
 
-    const result = await loginUser(email, password);
+    const result = await loginUser({ email, mobile, password });
 
     if (!result.success) {
       return res.status(401).json(result);

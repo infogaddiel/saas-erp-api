@@ -3,7 +3,7 @@ import Joi from 'joi';
 export const createCustomerSchema = Joi.object({
   name: Joi.string().max(255).required(),
   mobile: Joi.string().max(15).required(),
-  email: Joi.string().email().max(255).required(),
+  email: Joi.string().email().max(255).optional().allow(null, ''),
   address: Joi.string().allow(null, '').optional(),
   ship_address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
@@ -37,7 +37,7 @@ export const bulkCreateCustomersSchema = Joi.object({
       Joi.object({
         name: Joi.string().max(255).required(),
         mobile: Joi.string().max(15).required(),
-        email: Joi.string().email().max(255).required(),
+        email: Joi.string().email().max(255).optional().allow(null, ''),
         address: Joi.string().allow(null, '').optional(),
         ship_address: Joi.string().allow(null, '').optional(),
         type: Joi.string().valid('Individual', 'Company').required(),

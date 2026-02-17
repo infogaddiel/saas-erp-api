@@ -58,11 +58,26 @@ export const verifyOTP = async (userId: number, otp: string) => {
   }
 };
 
-export const loginUser = async (email: string, password: string) => {
+interface LoginInput {
+  email?: string | null;
+  mobile?: string | null;
+  password?: string;
+}
+
+export const loginUser = async ({ email, mobile, password }: LoginInput) => {
   try {
-    // Find user by email with role
+    const normalizedEmail = email?.trim();
+    const normalizedMobile = mobile?.trim();
+
+    if ((!normalizedEmail && !normalizedMobile) || !password) {
+      return { success: false, message: 'Invalid credentials' };
+    }
+
+    const whereCondition = normalizedEmail ? { email: normalizedEmail } : { mobile: normalizedMobile };
+
+    // Find user by email or mobile with role
     const user = await User.findOne({
-      where: { email },
+      where: whereCondition,
       include: [
         { model: Role, as: 'role', attributes: ['id', 'type'] },
       ],
