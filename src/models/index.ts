@@ -2,6 +2,8 @@ import User from './User';
 import Company from './Company';
 import Role from './Role';
 import Customer from './Customer';
+import CustomerType from './CustomerType';
+import CustomerDetail from './CustomerDetail';
 import Menu from './Menu';
 import Item from './Item';
 import Permission from './Permission';
@@ -21,6 +23,14 @@ Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
 // User - Customer (created_by)
 Customer.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(Customer, { foreignKey: 'created_by', as: 'customers' });
+
+// Customer - CustomerType
+Customer.belongsTo(CustomerType, { foreignKey: 'customer_type_id', as: 'customerType' });
+CustomerType.hasMany(Customer, { foreignKey: 'customer_type_id', as: 'customers' });
+
+// Customer - CustomerDetail
+CustomerDetail.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
+Customer.hasMany(CustomerDetail, { foreignKey: 'customer_id', as: 'customerDetails' });
 
 // User - Menu many-to-many through Permission
 User.hasMany(Permission, { foreignKey: 'user_id', as: 'permissions' });
@@ -70,4 +80,18 @@ Customer.hasMany(TicketService, { foreignKey: 'customer_id', as: 'ticketServices
 TicketService.belongsTo(User, { foreignKey: 'user_id', as: 'technician' });
 User.hasMany(TicketService, { foreignKey: 'user_id', as: 'ticketServices' });
 
-export { User, Company, Role, Customer, Menu, Item, Permission, Ticket, TicketStatus, TicketStatusHistory, TicketService };
+export {
+  User,
+  Company,
+  Role,
+  Customer,
+  CustomerType,
+  CustomerDetail,
+  Menu,
+  Item,
+  Permission,
+  Ticket,
+  TicketStatus,
+  TicketStatusHistory,
+  TicketService,
+};

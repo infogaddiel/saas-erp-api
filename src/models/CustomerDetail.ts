@@ -1,27 +1,35 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
-class Customer extends Model {
+class CustomerDetail extends Model {
   public id!: number;
+  public customer_id!: number;
   public name!: string;
   public mobile!: string | null;
   public email!: string | null;
   public address!: string | null;
-  public type!: 'Individual' | 'Company';
-  public customer_type_id!: number | null;
-  public status!: boolean;
-  public created_by!: number | null;
+  public is_primary!: boolean;
   public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
 
-Customer.init(
+CustomerDetail.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    customer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'customers',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
     },
     name: {
       type: DataTypes.STRING(255),
@@ -39,30 +47,10 @@ Customer.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    type: {
-      type: DataTypes.ENUM('Individual', 'Company'),
-      allowNull: false,
-    },
-    customer_type_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'customer_type',
-        key: 'id',
-      },
-    },
-    status: {
+    is_primary: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
-    },
-    created_by: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
+      defaultValue: false,
     },
     deleted_at: {
       type: DataTypes.DATE,
@@ -81,7 +69,7 @@ Customer.init(
   },
   {
     sequelize,
-    tableName: 'customers',
+    tableName: 'customer_details',
     timestamps: false,
     defaultScope: {
       where: {
@@ -91,4 +79,4 @@ Customer.init(
   }
 );
 
-export default Customer;
+export default CustomerDetail;

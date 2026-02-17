@@ -6,13 +6,17 @@ export const createCustomerSchema = Joi.object({
   email: Joi.string().email().max(255).required(),
   address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
+  customer_type_id: Joi.number().integer().positive().required(),
   status: Joi.boolean().optional()
 });
 
 export const updateCustomerSchema = Joi.object({
   name: Joi.string().max(255).required(),
+  mobile: Joi.string().max(15).optional(),
+  email: Joi.string().email().max(255).optional(),
   address: Joi.string().allow(null, '').optional(),
   type: Joi.string().valid('Individual', 'Company').required(),
+  customer_type_id: Joi.number().integer().positive().required(),
   status: Joi.boolean().optional()
 }).min(1);
 
@@ -34,10 +38,32 @@ export const bulkCreateCustomersSchema = Joi.object({
         email: Joi.string().email().max(255).required(),
         address: Joi.string().allow(null, '').optional(),
         type: Joi.string().valid('Individual', 'Company').required(),
+        customer_type_id: Joi.number().integer().positive().required(),
         status: Joi.boolean().optional(),
         created_by: Joi.number().integer().optional().allow(null),
       })
     )
     .min(1)
     .required(),
+});
+
+export const createCustomerDetailSchema = Joi.object({
+  name: Joi.string().max(255).required(),
+  mobile: Joi.string().max(20).allow(null, '').optional(),
+  email: Joi.string().email().max(255).allow(null, '').optional(),
+  address: Joi.string().allow(null, '').optional(),
+  is_primary: Joi.boolean().optional(),
+});
+
+export const updateCustomerDetailSchema = Joi.object({
+  name: Joi.string().max(255).optional(),
+  mobile: Joi.string().max(20).allow(null, '').optional(),
+  email: Joi.string().email().max(255).allow(null, '').optional(),
+  address: Joi.string().allow(null, '').optional(),
+  is_primary: Joi.boolean().optional(),
+}).min(1);
+
+export const customerDetailParamSchema = Joi.object({
+  id: Joi.number().integer().positive().required(),
+  detailId: Joi.number().integer().positive().required(),
 });
