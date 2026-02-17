@@ -125,7 +125,7 @@ export const deleteItem = async (id: number) => {
     return { success: false, message: 'Error deleting item' };
   }
 };
-export const bulkCreateItems = async (dataArray: CreateItemInput[]) => {
+export const bulkCreateItems = async (dataArray: CreateItemInput[],user_id:number) => {
   try {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       return { success: false, message: 'Invalid data: Expected non-empty array' };
@@ -145,7 +145,7 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[]) => {
         stock_quantity: data.stock_quantity ?? 0,
         notes: data.notes ?? null,
         status: data.status ?? true,
-        created_by: data.created_by ?? null,
+        created_by: data.created_by ?? user_id,
       })),
       { validate: true }
     );
@@ -156,7 +156,6 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[]) => {
       data: { count: items.length, items },
     };
   } catch (error) {
-    console.error('bulkCreateItems error:', error);
     return { success: false, message: 'Error creating items in bulk' };
   }
 };
