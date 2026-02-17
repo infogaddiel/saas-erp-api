@@ -83,7 +83,7 @@ export const getCustomers = async (page = 1, limit = 20, name?: string) => {
       include: [
         { model: CustomerType, as: 'customerType', attributes: ['id', 'name'] },
         { model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] },
-        { model: CustomerDetail, as: 'customerDetails', attributes: ['id', 'name', 'mobile', 'email', 'address', 'is_primary'] },
+        { model: CustomerDetail, as: 'customerDetails', required: false, attributes: ['id', 'name', 'mobile', 'email', 'address', 'is_primary'] },
       ],
     });
 

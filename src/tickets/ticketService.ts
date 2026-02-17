@@ -541,6 +541,7 @@ export const getTicketServiceById = async (ticketId: number, id: number) => {
       include: [
         { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
         { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+        { model: Ticket, as: 'ticket', attributes: ['id', 'ticket_number', 'service_type', 'priority', 'status_id', 'customer_id'] },
       ],
     });
     if (!service) return { success: false, message: 'Ticket service not found' };
