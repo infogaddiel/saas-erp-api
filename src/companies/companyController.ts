@@ -11,7 +11,12 @@ import {
 export const create = async (req: Request, res: Response) => {
   try {
     const result = await createCompany(req.body);
-    if (!result.success) return res.status(400).json(result);
+    if (!result.success) {
+      if (result.message === 'Company already exists') {
+        return res.status(409).json(result);
+      }
+      return res.status(400).json(result);
+    }
 
     return res.status(201).json(result);
   } catch (error) {
@@ -54,7 +59,12 @@ export const update = async (req: Request, res: Response) => {
     const updates = req.body;
 
     const result = await updateCompany(id, updates);
-    if (!result.success) return res.status(400).json(result);
+    if (!result.success) {
+      if (result.message === 'Company already exists') {
+        return res.status(409).json(result);
+      }
+      return res.status(400).json(result);
+    }
 
     return res.status(200).json(result);
   } catch (error) {

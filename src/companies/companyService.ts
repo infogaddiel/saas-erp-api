@@ -36,6 +36,16 @@ interface CompanyPayload {
 
 export const createCompany = async (data: CompanyPayload) => {
   try {
+    const existingCompany = await Company.findOne({
+      where: {
+        name: { [Op.iLike]: data.name.trim() },
+      },
+    });
+
+    if (existingCompany) {
+      return { success: false, message: 'Company already exists' };
+    }
+
     const company = await Company.create({
       name: data.name,
       address: data.address ?? null,
@@ -123,6 +133,19 @@ export const updateCompany = async (id: number, updates: Partial<CompanyPayload>
   try {
     const company = await Company.findByPk(id);
     if (!company) return { success: false, message: 'Company not found' };
+
+    if (updates.name && updates.name.trim() !== '') {
+      const existingCompany = await Company.findOne({
+        where: {
+          id: { [Op.ne]: id },
+          name: { [Op.iLike]: updates.name.trim() },
+        },
+      });
+
+      if (existingCompany) {
+        return { success: false, message: 'Company already exists' };
+      }
+    }
 
     await company.update(updates as any);
     return { success: true, data: company };
