@@ -11,6 +11,8 @@ import authenticate from './middlewares/authenticate';
 import uploadRoutes from './uploads/uploads';
 import companyRoutes from './companies/companies';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
+import { openApiSpec } from './swagger/openapi';
 
 dotenv.config();
 
@@ -37,6 +39,17 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
+app.get('/api-docs.json', (_req, res) => {
+  res.json(openApiSpec);
+});
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec, {
+    explorer: true,
+    customSiteTitle: 'Gaddiel ERP API Docs',
+  })
+);
 
 // Routes
 app.use('/api/auth', authRoutes);
