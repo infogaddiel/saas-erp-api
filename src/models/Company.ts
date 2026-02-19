@@ -15,6 +15,7 @@ class Company extends Model {
   public mobile!: string | null;
   public other_mobile!: string | null;
   public status!: boolean;
+  public is_otp_auth_required!: boolean;
   public license_number!: string | null;
   public license_expiry_date!: Date | null;
   public license_image!: string | null;
@@ -100,6 +101,11 @@ Company.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    is_otp_auth_required: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     license_number: {
       type: DataTypes.STRING(100),

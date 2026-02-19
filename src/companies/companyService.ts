@@ -14,6 +14,7 @@ interface CompanyPayload {
   mobile?: string | null;
   other_mobile?: string | null;
   status?: boolean;
+  is_otp_auth_required?: boolean;
   license_number?: string | null;
   license_expiry_date?: Date | null;
   license_image?: string | null;
@@ -63,6 +64,7 @@ export const createCompany = async (data: CompanyPayload) => {
       mobile: data.mobile ?? null,
       other_mobile: data.other_mobile ?? null,
       status: data.status ?? true,
+      is_otp_auth_required: data.is_otp_auth_required ?? false,
       license_number: data.license_number ?? null,
       license_expiry_date: data.license_expiry_date ?? null,
       license_image: data.license_image ?? null,

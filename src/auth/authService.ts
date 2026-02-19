@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { User, Permission, Menu, Role } from '../models';
+import { User, Permission, Menu, Role, Company } from '../models';
 import { sendOtpViaGetRequest } from '../utils/otpGateway';
 import { Op } from 'sequelize';
 
@@ -80,6 +80,7 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
       where: whereCondition,
       include: [
         { model: Role, as: 'role', attributes: ['id', 'type'] },
+        { model: Company, as: 'company', attributes: ['id', 'is_otp_auth_required'] },
       ],
       attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id', 'role_id'],
     });
@@ -95,11 +96,14 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
       return { success: false, message: 'Invalid password' };
     }
 
-    // Generate OTP
-    const otp = generateOTP();
+    const company = (user as any).company;
+    const isOtpAuthRequired = Boolean(company?.is_otp_auth_required);
+    let otp: string | null = null;
 
-    // Update user with OTP
-    await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+    if (isOtpAuthRequired) {
+      otp = generateOTP();
+      await User.update({ mobile_otp: otp }, { where: { id: user.id } });
+    }
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -139,12 +143,13 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
       });
       permissions = userPermissions;
     }
-   await sendOtpViaGetRequest(user.mobile, otp); // Send OTP to user's mobile
+    if (isOtpAuthRequired && otp) {
+      await sendOtpViaGetRequest(user.mobile, otp);
+    }
 
     return {
       success: true,
       message: 'Login successful',
-      otp,
       token,
       user: {
         id: user.id,
@@ -153,6 +158,7 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
         mobile: user.mobile,
         profile_image: user.profile_image,
         company_id: user.company_id,
+        is_otp_auth_required: isOtpAuthRequired,
         role: userRole,
         permissions,
       },
