@@ -2,13 +2,13 @@ import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { Ticket, User, Customer, Company, TicketStatus, TicketStatusHistory, TicketService as TicketServiceModel } from '../models';
 
-/** Convert dd-mm-yyyy to YYYY-MM-DD for DATEONLY storage */
+/** Convert dd-mm-yyyy[ HH:mm[:ss]] to YYYY-MM-DD HH:mm:ss for DATETIME storage */
 function parseScheduledDate(value: string | null | undefined): string | null {
   if (value == null || value === '') return null;
-  const match = String(value).match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  const match = String(value).match(/^(\d{2})-(\d{2})-(\d{4})(?:\s(\d{2}):(\d{2})(?::(\d{2}))?)?$/);
   if (!match) return null;
-  const [, d, m, y] = match;
-  return `${y}-${m}-${d}`;
+  const [, d, m, y, hh = '00', mm = '00', ss = '00'] = match;
+  return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
 }
 
 interface CreateTicketInput {
