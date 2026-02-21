@@ -207,7 +207,7 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
         email: data.email ?? null,
         address: data.address ?? null,
         ship_address: data.ship_address ?? null,
-        type: data.type,
+        type: data.type ?? 'Company',
         customer_type_id: data.customer_type_id ?? customerTypes.find(ct => ct.name === data.customer_type)?.id ?? null,
         created_by: userId,
       })),

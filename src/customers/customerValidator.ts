@@ -40,7 +40,7 @@ export const bulkCreateCustomersSchema = Joi.object({
         email: Joi.string().email().max(255).optional().allow(null, ''),
         address: Joi.string().allow(null, '').optional(),
         ship_address: Joi.string().allow(null, '').optional(),
-        type: Joi.string().valid('Individual', 'Company').required(),
+        type: Joi.string().valid('Individual', 'Company').optional(),
         customer_type_id: Joi.number().integer().positive().optional(),
         customer_type: Joi.string().max(255).optional(),
         status: Joi.boolean().optional(),
