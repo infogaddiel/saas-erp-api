@@ -66,7 +66,7 @@ TicketService.init(
       allowNull: true,
     },
     service_date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: true,
     },
     service_address: {

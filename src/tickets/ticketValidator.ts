@@ -81,19 +81,29 @@ export const idParamSchema = Joi.object({
 });
 
 const serviceDateSchema = Joi.string()
-  .pattern(/^\d{2}-\d{2}-\d{4}$/)
+  .pattern(/^\d{2}-\d{2}-\d{4}(?:\s\d{2}:\d{2}(?::\d{2})?)?$/)
   .optional()
   .allow(null, '')
   .custom((value, helpers) => {
     if (value == null || value === '') return value;
-    const [d, m, y] = value.split('-').map(Number);
+    const [datePart, timePart] = value.split(' ');
+    const [d, m, y] = datePart.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     if (isNaN(date.getTime()) || date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
       return helpers.error('date.invalid');
     }
+    if (timePart) {
+      const [h, min, sec] = timePart.split(':').map(Number);
+      if (
+        Number.isNaN(h) || Number.isNaN(min) || (timePart.split(':').length === 3 && Number.isNaN(sec)) ||
+        h < 0 || h > 23 || min < 0 || min > 59 || (sec != null && (sec < 0 || sec > 59))
+      ) {
+        return helpers.error('date.invalid');
+      }
+    }
     return value;
-  }, 'dd-mm-yyyy date validation')
-  .messages({ 'date.invalid': 'service_date must be a valid date in dd-mm-yyyy format' });
+  }, 'dd-mm-yyyy with optional time validation')
+  .messages({ 'date.invalid': 'service_date must be a valid date in dd-mm-yyyy or dd-mm-yyyy HH:mm[:ss] format' });
 
 export const ticketServiceParamSchema = Joi.object({
   ticketId: Joi.number().integer().positive().required(),
