@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi, { custom } from 'joi';
 
 export const createCustomerSchema = Joi.object({
   name: Joi.string().max(255).required(),
@@ -41,7 +41,8 @@ export const bulkCreateCustomersSchema = Joi.object({
         address: Joi.string().allow(null, '').optional(),
         ship_address: Joi.string().allow(null, '').optional(),
         type: Joi.string().valid('Individual', 'Company').required(),
-        customer_type_id: Joi.number().integer().positive().required(),
+        customer_type_id: Joi.number().integer().positive().optional(),
+        customer_type: Joi.string().max(255).optional(),
         status: Joi.boolean().optional(),
         created_by: Joi.number().integer().optional().allow(null),
       })

@@ -10,6 +10,7 @@ interface CreateCustomerInput {
   ship_address?: string | null;
   type: 'Individual' | 'Company';
   customer_type_id?: number | null;
+  customer_type?: string | null;
   status?: boolean;
   created_by?: number | null;
 }
@@ -197,6 +198,7 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       return { success: false, message: 'Invalid data: Expected non-empty array' };
     }
+    const customerTypes = await CustomerType.findAll({ attributes: ['id', 'name'] });
 
     const customers = await Customer.bulkCreate(
       dataArray.map((data) => ({
@@ -206,7 +208,7 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
         address: data.address ?? null,
         ship_address: data.ship_address ?? null,
         type: data.type,
-        customer_type_id: data.customer_type_id ?? null,
+        customer_type_id: data.customer_type_id ?? customerTypes.find(ct => ct.name === data.customer_type)?.id ?? null,
         created_by: userId,
       })),
       { validate: true }
