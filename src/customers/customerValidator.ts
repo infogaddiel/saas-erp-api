@@ -15,8 +15,8 @@ export const createCustomerSchema = Joi.object({
 
 export const updateCustomerSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  mobile: Joi.string().max(15).optional(),
-  email: Joi.string().email().max(255).optional(),
+  mobile: Joi.string().max(15).required(),
+  email:Joi.string().email().max(255).optional().allow(null, ''),
   address: Joi.string().allow(null, '').optional(),
   ship_address: Joi.string().allow(null, '').optional(),
   gst_number: Joi.string().allow(null, '').optional(),
@@ -59,7 +59,7 @@ export const bulkCreateCustomersSchema = Joi.object({
 
 export const createCustomerDetailSchema = Joi.object({
   name: Joi.string().max(255).required(),
-  mobile: Joi.string().max(20).allow(null, '').optional(),
+  mobile: Joi.string().max(15).required(),
   email: Joi.string().email().max(255).allow(null, '').optional(),
   address: Joi.string().allow(null, '').optional(),
   ship_address: Joi.string().allow(null, '').optional(),
@@ -70,7 +70,7 @@ export const createCustomerDetailSchema = Joi.object({
 
 export const updateCustomerDetailSchema = Joi.object({
   name: Joi.string().max(255).optional(),
-  mobile: Joi.string().max(20).allow(null, '').optional(),
+  mobile: Joi.string().max(15).required(),
   email: Joi.string().email().max(255).allow(null, '').optional(),
   address: Joi.string().allow(null, '').optional(),
   ship_address: Joi.string().allow(null, '').optional(),
