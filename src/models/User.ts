@@ -32,7 +32,6 @@ User.init(
     email: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      unique: true,
     },
     profile_image: {
       type: DataTypes.STRING(255),
@@ -41,7 +40,7 @@ User.init(
     mobile: {
       type: DataTypes.STRING(15),
       allowNull: false,
-      unique: true,
+      unique: 'users_mobile_key',
     },
     password: {
       type: DataTypes.STRING(255),

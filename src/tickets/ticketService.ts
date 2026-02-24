@@ -154,7 +154,7 @@ export const createTicket = async (data: CreateTicketInput) => {
               priority: data.priority ?? 'Medium',
               service_type: data.service_type,
               assigned_technician_id: data.assigned_technician_id ?? null,
-              scheduled_date: parseScheduledDate(data.scheduled_date ?? undefined),
+              scheduled_date: data.scheduled_date ?? undefined,
               equipment_type: data.equipment_type ?? null,
               equipment_model: data.equipment_model ?? null,
               issue_description: data.issue_description,
@@ -347,7 +347,7 @@ export const updateTicket = async (id: number, updates: UpdateTicketInput) => {
       delete payload.changed_by;
 
       if (updates.scheduled_date !== undefined) {
-        payload.scheduled_date = parseScheduledDate(updates.scheduled_date);
+        payload.scheduled_date = updates.scheduled_date;
       }
 
       await ticket.update(payload, { transaction });
@@ -440,7 +440,7 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       customer_name: data.customer_name,
       email: data.email ?? null,
       phone: data.phone ?? null,
-      service_date: parseDate(data.service_date ?? undefined),
+      service_date: data.service_date ?? undefined,
       service_address: data.service_address,
       service_type: data.service_type ?? 'Repair',
       user_id: data.user_id ?? null,
@@ -566,7 +566,7 @@ export const updateTicketService = async (ticketId: number, id: number, updates:
       if (!technician) return { success: false, message: 'User not found' };
     }
     if (updates.service_date !== undefined) {
-      payload.service_date = parseDate(updates.service_date);
+      payload.service_date = updates.service_date;
     }
     if (updates.photos !== undefined) {
       payload.photos = Array.isArray(updates.photos) ? updates.photos : [];

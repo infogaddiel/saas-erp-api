@@ -121,7 +121,7 @@ export const createTicketServiceSchema = Joi.object({
   }),
   email: Joi.string().email().max(255).optional().allow(null, ''),
   phone: Joi.string().max(30).optional().allow(null, ''),
-  service_date: serviceDateSchema,
+  service_date: Joi.date().iso().raw().required(),
   service_address: Joi.string().min(1).max(2000).required().messages({
     'string.empty': 'service_address is required',
   }),
@@ -143,7 +143,7 @@ export const updateTicketServiceSchema = Joi.object({
   customer_name: Joi.string().min(1).max(255).optional(),
   email: Joi.string().email().max(255).optional().allow(null, ''),
   phone: Joi.string().max(30).optional().allow(null, ''),
-  service_date: serviceDateSchema,
+  service_date: Joi.date().iso().raw().required(),
   service_address: Joi.string().min(1).max(2000).optional(),
   service_type: Joi.string().max(100).optional(),
   user_id: Joi.number().integer().positive().optional().allow(null),
