@@ -30,7 +30,8 @@ Customer.init(
     },
     mobile: {
       type: DataTypes.STRING(20),
-      allowNull: true,
+      allowNull: false,
+      unique: 'customers_mobile_key',
     },
     email: {
       type: DataTypes.STRING(255),
@@ -42,6 +43,14 @@ Customer.init(
     },
     ship_address: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+     gst_number: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    pan_number: {
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     type: {

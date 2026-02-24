@@ -6,6 +6,8 @@ interface CreateCustomerInput {
   name: string;
   mobile?: string | null;
   email?: string | null;
+  gst_number?: string | null;
+  pan_number?: string | null;
   address?: string | null;
   ship_address?: string | null;
   type: 'Individual' | 'Company';
@@ -54,6 +56,8 @@ export const createCustomer = async (data: CreateCustomerInput) => {
       name: data.name,
       mobile,
       email,
+      gst_number: data.gst_number ?? null,
+      pan_number: data.pan_number ?? null,
       address: data.address ?? null,
       ship_address: data.ship_address ?? null,
       type: data.type,
@@ -207,6 +211,8 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
         email: data.email ?? null,
         address: data.address ?? null,
         ship_address: data.ship_address ?? null,
+        gst_number: data.gst_number ?? null,
+        pan_number: data.pan_number ?? null,
         type: data.type ?? 'Company',
         customer_type_id: data.customer_type_id ?? customerTypes.find(ct => ct.name === data.customer_type)?.id ?? null,
         created_by: userId,
@@ -244,6 +250,8 @@ export const exportCustomersToExcel = async () => {
       { header: 'Name', key: 'name', width: 20 },
       { header: 'Mobile', key: 'mobile', width: 15 },
       { header: 'Email', key: 'email', width: 25 },
+      { header: 'GST Number', key: 'gst_number', width: 25 },
+      { header: 'PAN Number', key: 'pan_number', width: 25 },
       { header: 'Address', key: 'address', width: 30 },
       { header: 'Shipping Address', key: 'ship_address', width: 30 },
       { header: 'Type', key: 'type', width: 15 },
@@ -261,6 +269,8 @@ export const exportCustomersToExcel = async () => {
         name: customer.name,
         mobile: customer.mobile,
         email: customer.email,
+        gst_number: customer.gst_number,
+        pan_number: customer.pan_number,
         address: customer.address,
         ship_address: customer.ship_address,
         type: customer.type,
@@ -290,11 +300,11 @@ export const exportCustomersToExcel = async () => {
   }
 };
 
-export const getCustomersForDropdown = async (companyId: number,whereCondition:any = {}) => {
+export const getCustomersForDropdown = async (companyId: number, whereCondition: any = {}) => {
   try {
     const customers = await Customer.findAll({
-      attributes: ['id', 'name','mobile','email','address', 'ship_address', 'customer_type_id'],
-      where:whereCondition,
+      attributes: ['id', 'name', 'mobile', 'email', 'address', 'ship_address', 'customer_type_id'],
+      where: whereCondition,
       include: [
         {
           model: CustomerType,
