@@ -40,6 +40,8 @@ const contractInvoiceSchema = Joi.object({
 });
 
 export const createContractSchema = Joi.object({
+  name: Joi.string().trim().min(1).max(255).required(),
+  description: Joi.string().trim().max(10000).optional().allow(null, ''),
   customer_id: Joi.number().integer().positive().required(),
   contract_number: Joi.string().trim().max(50).optional(),
   contract_type: Joi.string()
@@ -65,6 +67,8 @@ export const createContractSchema = Joi.object({
 });
 
 export const updateContractSchema = Joi.object({
+  name: Joi.string().trim().min(1).max(255).optional(),
+  description: Joi.string().trim().max(10000).optional().allow(null, ''),
   customer_id: Joi.number().integer().positive().optional(),
   contract_number: Joi.string().trim().max(50).optional(),
   contract_type: Joi.string()

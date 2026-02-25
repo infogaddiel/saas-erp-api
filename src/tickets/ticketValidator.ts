@@ -80,31 +80,6 @@ export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });
 
-const serviceDateSchema = Joi.string()
-  .pattern(/^\d{2}-\d{2}-\d{4}(?:\s\d{2}:\d{2}(?::\d{2})?)?$/)
-  .optional()
-  .allow(null, '')
-  .custom((value, helpers) => {
-    if (value == null || value === '') return value;
-    const [datePart, timePart] = value.split(' ');
-    const [d, m, y] = datePart.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    if (isNaN(date.getTime()) || date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
-      return helpers.error('date.invalid');
-    }
-    if (timePart) {
-      const [h, min, sec] = timePart.split(':').map(Number);
-      if (
-        Number.isNaN(h) || Number.isNaN(min) || (timePart.split(':').length === 3 && Number.isNaN(sec)) ||
-        h < 0 || h > 23 || min < 0 || min > 59 || (sec != null && (sec < 0 || sec > 59))
-      ) {
-        return helpers.error('date.invalid');
-      }
-    }
-    return value;
-  }, 'dd-mm-yyyy with optional time validation')
-  .messages({ 'date.invalid': 'service_date must be a valid date in dd-mm-yyyy or dd-mm-yyyy HH:mm[:ss] format' });
-
 export const ticketServiceParamSchema = Joi.object({
   ticketId: Joi.number().integer().positive().required(),
 });
@@ -115,6 +90,7 @@ export const ticketServiceIdParamSchema = Joi.object({
 });
 
 export const createTicketServiceSchema = Joi.object({
+  contract_id: Joi.number().integer().positive().required(),
   customer_id: Joi.number().integer().positive().optional().allow(null),
   customer_name: Joi.string().min(1).max(255).required().messages({
     'string.empty': 'customer_name is required',
@@ -139,6 +115,7 @@ export const createTicketServiceSchema = Joi.object({
 });
 
 export const updateTicketServiceSchema = Joi.object({
+  contract_id: Joi.number().integer().positive().optional(),
   customer_id: Joi.number().integer().positive().optional().allow(null),
   customer_name: Joi.string().min(1).max(255).optional(),
   email: Joi.string().email().max(255).optional().allow(null, ''),

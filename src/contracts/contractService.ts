@@ -1,6 +1,7 @@
 import sequelize from '../config/database';
 import { Op, Transaction, UniqueConstraintError } from 'sequelize';
 import {
+  Company,
   Contract,
   ContractItem,
   ContractInvoice,
@@ -36,6 +37,8 @@ interface CreateContractInvoiceInput {
 }
 
 interface CreateContractInput {
+  name: string;
+  description?: string | null;
   customer_id: number;
   contract_type: 'AMC' | 'Service' | 'Subscription';
   status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
@@ -51,7 +54,7 @@ interface UpdateContractInput extends Partial<CreateContractInput> {
   contract_number?: string;
 }
 
-const CONTRACT_NUMBER_PREFIX = 'CONT';
+const DEFAULT_CONTRACT_PREFIX = 'CON';
 const CONTRACT_NUMBER_PADDING = 3;
 const MAX_CONTRACT_NUMBER_RETRIES = 3;
 
@@ -76,11 +79,42 @@ const calculateTotalValue = (lineItems: CreateContractItemInput[]): number => {
   return lineItems.reduce((sum, item) => sum + (item.quantity ?? 1) * item.unit_price, 0);
 };
 
-const generateNextContractNumber = async (transaction: Transaction): Promise<string> => {
+const getCompanyPrefix = (companyName: string | null | undefined): string => {
+  if (!companyName) return DEFAULT_CONTRACT_PREFIX;
+  const normalized = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length === 0) return DEFAULT_CONTRACT_PREFIX;
+  return normalized.slice(0, 3).padEnd(3, 'X');
+};
+
+const getCompanyPrefixByCustomerId = async (
+  customerId: number,
+  transaction: Transaction
+): Promise<string> => {
+  const customer = await Customer.findByPk(customerId, {
+    attributes: ['id'],
+    include: [
+      {
+        model: User,
+        as: 'createdBy',
+        attributes: ['id', 'company_id'],
+        required: false,
+        include: [{ model: Company, as: 'company', attributes: ['id', 'name'], required: false }],
+      },
+    ],
+    transaction,
+  });
+
+  const companyName = (customer as any)?.createdBy?.company?.name as string | undefined;
+  return getCompanyPrefix(companyName);
+};
+
+const generateNextContractNumber = async (customerId: number, transaction: Transaction): Promise<string> => {
+  const prefix = await getCompanyPrefixByCustomerId(customerId, transaction);
+
   const latestContract = await Contract.findOne({
     where: {
       contract_number: {
-        [Op.iLike]: `${CONTRACT_NUMBER_PREFIX}%`,
+        [Op.iLike]: `${prefix}%`,
       },
     },
     attributes: ['contract_number'],
@@ -92,14 +126,14 @@ const generateNextContractNumber = async (transaction: Transaction): Promise<str
   let nextSequence = 1;
   const currentNumber = latestContract?.contract_number;
   if (currentNumber) {
-    const match = String(currentNumber).match(new RegExp(`^${CONTRACT_NUMBER_PREFIX}(\\d+)$`, 'i'));
+    const match = String(currentNumber).match(new RegExp(`^${prefix}(\\d+)$`, 'i'));
     if (match) {
       const parsed = parseInt(match[1], 10);
       if (!Number.isNaN(parsed)) nextSequence = parsed + 1;
     }
   }
 
-  return `${CONTRACT_NUMBER_PREFIX}${String(nextSequence).padStart(CONTRACT_NUMBER_PADDING, '0')}`;
+  return `${prefix}CONT${String(nextSequence).padStart(CONTRACT_NUMBER_PADDING, '0')}`;
 };
 
 const createLineItemsAndSchedules = async (
@@ -161,6 +195,8 @@ export const createContract = async (data: CreateContractInput) => {
     const customer = await Customer.findByPk(data.customer_id, { attributes: ['id'] });
     if (!customer) return { success: false, message: 'Customer not found', statusCode: 404 };
 
+    const contractName = data.name.trim();
+    const contractDescription = data.description?.trim() ? data.description.trim() : null;
     const lineItems = data.line_items ?? [];
     const invoices = data.invoices ?? [];
     const derivedTotal = calculateTotalValue(lineItems);
@@ -170,10 +206,12 @@ export const createContract = async (data: CreateContractInput) => {
     for (let attempt = 0; attempt < MAX_CONTRACT_NUMBER_RETRIES; attempt += 1) {
       try {
         created = await sequelize.transaction(async (transaction) => {
-          const contractNumber = await generateNextContractNumber(transaction);
+          const contractNumber = await generateNextContractNumber(data.customer_id, transaction);
 
           const contract = await Contract.create(
             {
+              name: contractName,
+              description: contractDescription,
               customer_id: data.customer_id,
               contract_number: contractNumber,
               contract_type: data.contract_type,
@@ -284,6 +322,27 @@ export const getContractById = async (id: number) => {
   }
 };
 
+export const getContractsForDropdown = async (customer_id?: number) => {
+  try {
+    const where: any = {};
+    if (customer_id != null) where.customer_id = customer_id;
+
+    const contracts = await Contract.findAll({
+      attributes: ['id', 'name', 'contract_number', 'status'],
+      where,
+      order: [
+        ['name', 'ASC'],
+        ['id', 'DESC'],
+      ],
+    });
+
+    return { success: true, data: contracts };
+  } catch (error) {
+    console.error('getContractsForDropdown error:', error);
+    return { success: false, message: 'Error fetching contracts for dropdown' };
+  }
+};
+
 export const updateContract = async (id: number, updates: UpdateContractInput) => {
   try {
     const contract = await Contract.findByPk(id);
@@ -320,6 +379,11 @@ export const updateContract = async (id: number, updates: UpdateContractInput) =
       delete payload.line_items;
       delete payload.invoices;
 
+      if (payload.name !== undefined) payload.name = String(payload.name).trim();
+      if (payload.description !== undefined) {
+        const normalizedDescription = payload.description == null ? null : String(payload.description).trim();
+        payload.description = normalizedDescription || null;
+      }
       if (payload.currency) payload.currency = String(payload.currency).toUpperCase();
 
       if (updates.line_items && updates.total_value == null) {

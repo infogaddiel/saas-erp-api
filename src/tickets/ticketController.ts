@@ -194,7 +194,12 @@ export const createService = async (req: Request, res: Response) => {
     });
 
     if (!result.success) {
-      const status = result.message === 'Ticket not found' || result.message === 'User not found' ? 404 : 500;
+      const status =
+        result.message === 'Ticket not found' ||
+        result.message === 'User not found' ||
+        result.message === 'Contract not found'
+          ? 404
+          : 500;
       return res.status(status).json(result);
     }
 
@@ -262,7 +267,12 @@ export const updateService = async (req: Request, res: Response) => {
     const id = parseInt(req.params.serviceId, 10);
     const result = await updateTicketService(ticketId, id, req.body);
     if (!result.success) {
-      const status = result.message === 'Ticket service not found' || result.message === 'User not found' ? 404 : 500;
+      const status =
+        result.message === 'Ticket service not found' ||
+        result.message === 'User not found' ||
+        result.message === 'Contract not found'
+          ? 404
+          : 500;
       return res.status(status).json(result);
     }
 

@@ -3,6 +3,8 @@ import sequelize from '../config/database';
 
 class Contract extends Model {
   public id!: number;
+  public name!: string;
+  public description?: string;
   public customer_id!: number;
   public contract_number!: string;
   public contract_type!: 'AMC' | 'Service' | 'Subscription';
@@ -20,6 +22,15 @@ Contract.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      defaultValue: 'Untitled Contract',
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     customer_id: {
       type: DataTypes.INTEGER,

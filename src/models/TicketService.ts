@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 class TicketService extends Model {
   public id!: number;
   public ticket_id!: number;
+  public contract_id!: number | null;
   public customer_id!: number | null;
   public customer_name!: string;
   public email!: string | null;
@@ -38,6 +39,16 @@ TicketService.init(
       allowNull: false,
       references: {
         model: 'tickets',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+    contract_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'contracts',
         key: 'id',
       },
       onDelete: 'CASCADE',

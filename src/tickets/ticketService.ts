@@ -1,6 +1,15 @@
 import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
-import { Ticket, User, Customer, Company, TicketStatus, TicketStatusHistory, TicketService as TicketServiceModel } from '../models';
+import {
+  Ticket,
+  User,
+  Customer,
+  Company,
+  TicketStatus,
+  TicketStatusHistory,
+  TicketService as TicketServiceModel,
+  Contract,
+} from '../models';
 
 /** Convert dd-mm-yyyy[ HH:mm[:ss]] to YYYY-MM-DD HH:mm:ss for DATETIME storage */
 function parseScheduledDate(value: string | null | undefined): string | null {
@@ -31,6 +40,7 @@ interface UpdateTicketInput extends Partial<CreateTicketInput> {
 
 interface CreateTicketServiceInput {
   ticket_id: number;
+  contract_id: number;
   customer_id?: number | null;
   customer_name: string;
   email?: string | null;
@@ -423,6 +433,8 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
   try {
     const ticket = await Ticket.findByPk(data.ticket_id);
     if (!ticket) return { success: false, message: 'Ticket not found' };
+    const contract = await Contract.findByPk(data.contract_id, { attributes: ['id'] });
+    if (!contract) return { success: false, message: 'Contract not found' };
     if (data.user_id != null) {
       const technician = await User.findByPk(data.user_id);
       if (!technician) return { success: false, message: 'User not found' };
@@ -436,6 +448,7 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
 
     const created = await TicketServiceModel.create({
       ticket_id: data.ticket_id,
+      contract_id: data.contract_id,
       customer_id: data.customer_id ?? null,
       customer_name: data.customer_name,
       email: data.email ?? null,
@@ -455,7 +468,20 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       report_status: reportStatus,
     });
 
-    return { success: true, data: created };
+    const withAssociations = await TicketServiceModel.findByPk(created.id, {
+      include: [
+        { model: Contract, as: 'contract', attributes: ['id', 'name', 'contract_number', 'status'] },
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
+        { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+        {
+          model: Ticket,
+          as: 'ticket',
+          attributes: ['id', 'ticket_number', 'service_type', 'priority', 'status_id', 'customer_id'],
+        },
+      ],
+    });
+
+    return { success: true, data: withAssociations };
   } catch (error) {
     console.error('createTicketService error:', error);
     return { success: false, message: 'Error creating ticket service' };
@@ -471,6 +497,7 @@ export const getTicketServices = async (ticketId: number) => {
       where: { ticket_id: ticketId },
       order: [['id', 'DESC']],
       include: [
+        { model: Contract, as: 'contract', attributes: ['id', 'name', 'contract_number', 'status'] },
         { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
         { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
       ],
@@ -507,6 +534,7 @@ export const getTicketServicesByCompany = async (companyId: number, page = 1, li
             },
           ],
         },
+        { model: Contract, as: 'contract', attributes: ['id', 'name', 'contract_number', 'status'] },
         { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
         { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
       ],
@@ -539,6 +567,7 @@ export const getTicketServiceById = async (ticketId: number, id: number) => {
     const service = await TicketServiceModel.findOne({
       where: { id, ticket_id: ticketId },
       include: [
+        { model: Contract, as: 'contract', attributes: ['id', 'name', 'contract_number', 'status'] },
         { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
         { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
         { model: Ticket, as: 'ticket', attributes: ['id', 'ticket_number', 'service_type', 'priority', 'status_id', 'customer_id'] },
@@ -565,6 +594,10 @@ export const updateTicketService = async (ticketId: number, id: number, updates:
       const technician = await User.findByPk(updates.user_id);
       if (!technician) return { success: false, message: 'User not found' };
     }
+    if (updates.contract_id !== undefined) {
+      const contract = await Contract.findByPk(updates.contract_id, { attributes: ['id'] });
+      if (!contract) return { success: false, message: 'Contract not found' };
+    }
     if (updates.service_date !== undefined) {
       payload.service_date = updates.service_date;
     }
@@ -574,7 +607,16 @@ export const updateTicketService = async (ticketId: number, id: number, updates:
 
     await service.update(payload);
 
-    return { success: true, data: service };
+    const withAssociations = await TicketServiceModel.findByPk(service.id, {
+      include: [
+        { model: Contract, as: 'contract', attributes: ['id', 'name', 'contract_number', 'status'] },
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email', 'address', 'type'] },
+        { model: User, as: 'technician', attributes: ['id', 'name', 'email', 'mobile'] },
+        { model: Ticket, as: 'ticket', attributes: ['id', 'ticket_number', 'service_type', 'priority', 'status_id', 'customer_id'] },
+      ],
+    });
+
+    return { success: true, data: withAssociations };
   } catch (error) {
     console.error('updateTicketService error:', error);
     return { success: false, message: 'Error updating ticket service' };

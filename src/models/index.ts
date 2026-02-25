@@ -83,6 +83,8 @@ TicketService.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' })
 Customer.hasMany(TicketService, { foreignKey: 'customer_id', as: 'ticketServices' });
 TicketService.belongsTo(User, { foreignKey: 'user_id', as: 'technician' });
 User.hasMany(TicketService, { foreignKey: 'user_id', as: 'ticketServices' });
+TicketService.belongsTo(Contract, { foreignKey: 'contract_id', as: 'contract' });
+Contract.hasMany(TicketService, { foreignKey: 'contract_id', as: 'ticketServices' });
 
 // Contract - Customer
 Contract.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });

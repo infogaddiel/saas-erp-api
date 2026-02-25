@@ -4,6 +4,7 @@ import {
   deleteContract,
   getContractById,
   getContracts,
+  getContractsForDropdown,
   updateContract,
 } from './contractService';
 
@@ -52,6 +53,18 @@ export const getById = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Get contract controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const customer_id = req.params.customer_id ? parseInt(req.params.customer_id, 10) : undefined;
+    const result = await getContractsForDropdown(customer_id);
+    if (!result.success) return res.status(500).json(result);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown contracts controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };
