@@ -11,6 +11,10 @@ import Ticket from './Ticket';
 import TicketStatus from './TicketStatus';
 import TicketStatusHistory from './TicketStatusHistory';
 import TicketService from './TicketService';
+import Contract from './Contract';
+import ContractItem from './ContractItem';
+import ServiceSchedule from './ServiceSchedule';
+import ContractInvoice from './ContractInvoice';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -80,6 +84,30 @@ Customer.hasMany(TicketService, { foreignKey: 'customer_id', as: 'ticketServices
 TicketService.belongsTo(User, { foreignKey: 'user_id', as: 'technician' });
 User.hasMany(TicketService, { foreignKey: 'user_id', as: 'ticketServices' });
 
+// Contract - Customer
+Contract.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
+Customer.hasMany(Contract, { foreignKey: 'customer_id', as: 'contracts' });
+
+// ContractItem - Contract
+ContractItem.belongsTo(Contract, { foreignKey: 'contract_id', as: 'contract' });
+Contract.hasMany(ContractItem, { foreignKey: 'contract_id', as: 'lineItems' });
+
+// ContractItem - Item (product)
+ContractItem.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+Item.hasMany(ContractItem, { foreignKey: 'item_id', as: 'contractItems' });
+
+// ServiceSchedule - ContractItem
+ServiceSchedule.belongsTo(ContractItem, { foreignKey: 'contract_item_id', as: 'lineItem' });
+ContractItem.hasMany(ServiceSchedule, { foreignKey: 'contract_item_id', as: 'serviceSchedules' });
+
+// ServiceSchedule - User (technician)
+ServiceSchedule.belongsTo(User, { foreignKey: 'technician_id', as: 'technician' });
+User.hasMany(ServiceSchedule, { foreignKey: 'technician_id', as: 'serviceSchedules' });
+
+// ContractInvoice - Contract
+ContractInvoice.belongsTo(Contract, { foreignKey: 'contract_id', as: 'contract' });
+Contract.hasMany(ContractInvoice, { foreignKey: 'contract_id', as: 'invoices' });
+
 export {
   User,
   Company,
@@ -94,4 +122,8 @@ export {
   TicketStatus,
   TicketStatusHistory,
   TicketService,
+  Contract,
+  ContractItem,
+  ServiceSchedule,
+  ContractInvoice,
 };

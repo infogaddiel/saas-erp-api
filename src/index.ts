@@ -10,6 +10,7 @@ import ticketRoutes from './tickets/tickets';
 import authenticate from './middlewares/authenticate';
 import uploadRoutes from './uploads/uploads';
 import companyRoutes from './companies/companies';
+import contractRoutes from './contracts/contracts';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './swagger/openapi';
@@ -58,6 +59,7 @@ app.use('/api/users', authenticate, userRoutes);
 app.use('/api/companies', authenticate, companyRoutes);
 app.use('/api/items', authenticate, itemRoutes);
 app.use('/api/tickets', authenticate, ticketRoutes);
+app.use('/api/contracts', authenticate, contractRoutes);
 app.use('/api/uploads', uploadRoutes);
 
 // Health check endpoint
