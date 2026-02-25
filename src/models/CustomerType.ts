@@ -18,7 +18,7 @@ CustomerType.init(
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true,
+      unique: 'customer_type_name_key',
     },
     created_at: {
       type: DataTypes.DATE,
