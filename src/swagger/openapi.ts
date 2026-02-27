@@ -50,6 +50,19 @@ import {
   createTicketServiceSchema,
   updateTicketServiceSchema,
 } from '../tickets/ticketValidator';
+import {
+  createContractSchema,
+  updateContractSchema,
+  listContractsSchema,
+  idParamSchema as contractIdParamSchema,
+} from '../contracts/contractValidator';
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  listProjectsSchema,
+  projectDropdownSchema,
+  idParamSchema as projectIdParamSchema,
+} from '../projects/projectValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -779,6 +792,149 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/contracts': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create contract',
+        tags: ['Contracts'],
+        requestBody: jsonRequestBody(createContractSchema),
+        responses: {
+          201: successResponse('Contract created'),
+          200: successResponse('Contract created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List contracts',
+        tags: ['Contracts'],
+        parameters: makeParameters(listContractsSchema, 'query'),
+        responses: {
+          200: successResponse('Contracts fetched'),
+        },
+      })
+    ),
+  },
+  '/api/contracts/dropdown/{customer_id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get contracts dropdown options by customer',
+        tags: ['Contracts'],
+        parameters: [
+          {
+            in: 'path',
+            name: 'customer_id',
+            required: true,
+            schema: { type: 'integer', minimum: 1 },
+          },
+        ],
+        responses: {
+          200: successResponse('Contracts dropdown fetched'),
+        },
+      })
+    ),
+  },
+  '/api/contracts/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get contract by id',
+        tags: ['Contracts'],
+        parameters: makeParameters(contractIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Contract fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update contract',
+        tags: ['Contracts'],
+        parameters: makeParameters(contractIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateContractSchema),
+        responses: {
+          200: successResponse('Contract updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete contract',
+        tags: ['Contracts'],
+        parameters: makeParameters(contractIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Contract deleted'),
+        },
+      })
+    ),
+  },
+  '/api/projects': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create project',
+        tags: ['Projects'],
+        requestBody: jsonRequestBody(createProjectSchema),
+        responses: {
+          201: successResponse('Project created'),
+          200: successResponse('Project created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List projects',
+        tags: ['Projects'],
+        parameters: makeParameters(listProjectsSchema, 'query'),
+        responses: {
+          200: successResponse('Projects fetched'),
+        },
+      })
+    ),
+  },
+  '/api/projects/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get project dropdown options',
+        tags: ['Projects'],
+        parameters: makeParameters(projectDropdownSchema, 'query'),
+        responses: {
+          200: successResponse('Project dropdown fetched'),
+        },
+      })
+    ),
+  },
+  '/api/projects/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get project by id',
+        tags: ['Projects'],
+        parameters: makeParameters(projectIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Project fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update project',
+        tags: ['Projects'],
+        parameters: makeParameters(projectIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateProjectSchema),
+        responses: {
+          200: successResponse('Project updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete project',
+        tags: ['Projects'],
+        parameters: makeParameters(projectIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Project deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -831,6 +987,8 @@ export const openApiSpec = {
     { name: 'Users' },
     { name: 'Items' },
     { name: 'Tickets' },
+    { name: 'Contracts' },
+    { name: 'Projects' },
     { name: 'Uploads' },
   ],
   components: {
@@ -844,4 +1002,3 @@ export const openApiSpec = {
   },
   paths: docsPaths,
 };
-

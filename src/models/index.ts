@@ -15,6 +15,7 @@ import Contract from './Contract';
 import ContractItem from './ContractItem';
 import ServiceSchedule from './ServiceSchedule';
 import ContractInvoice from './ContractInvoice';
+import Project from './Project';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -110,6 +111,14 @@ User.hasMany(ServiceSchedule, { foreignKey: 'technician_id', as: 'serviceSchedul
 ContractInvoice.belongsTo(Contract, { foreignKey: 'contract_id', as: 'contract' });
 Contract.hasMany(ContractInvoice, { foreignKey: 'contract_id', as: 'invoices' });
 
+// Project - User (created_by)
+Project.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+User.hasMany(Project, { foreignKey: 'created_by', as: 'projects' });
+
+// Project - Customer
+Project.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
+Customer.hasMany(Project, { foreignKey: 'customer_id', as: 'projects' });
+
 export {
   User,
   Company,
@@ -128,4 +137,5 @@ export {
   ContractItem,
   ServiceSchedule,
   ContractInvoice,
+  Project,
 };
