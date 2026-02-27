@@ -43,6 +43,7 @@ export const createContractSchema = Joi.object({
   name: Joi.string().trim().min(1).max(255).required(),
   description: Joi.string().trim().max(10000).optional().allow(null, ''),
   customer_id: Joi.number().integer().positive().required(),
+  project_id: Joi.number().integer().positive().required(),
   contract_number: Joi.string().trim().max(50).optional(),
   contract_type: Joi.string()
     .valid(...CONTRACT_TYPES)
@@ -70,6 +71,7 @@ export const updateContractSchema = Joi.object({
   name: Joi.string().trim().min(1).max(255).optional(),
   description: Joi.string().trim().max(10000).optional().allow(null, ''),
   customer_id: Joi.number().integer().positive().optional(),
+  project_id: Joi.number().integer().positive().optional(),
   contract_number: Joi.string().trim().max(50).optional(),
   contract_type: Joi.string()
     .valid(...CONTRACT_TYPES)
@@ -100,6 +102,7 @@ export const listContractsSchema = Joi.object({
   page: Joi.number().integer().min(1).optional().default(1),
   limit: Joi.number().integer().min(1).max(100).optional().default(20),
   customer_id: Joi.number().integer().positive().optional(),
+  project_id: Joi.number().integer().positive().optional(),
   contract_number: Joi.string().trim().max(50).optional().allow(''),
   contract_type: Joi.string()
     .valid(...CONTRACT_TYPES)

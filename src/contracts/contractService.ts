@@ -7,6 +7,7 @@ import {
   ContractInvoice,
   Customer,
   Item,
+  Project,
   ServiceSchedule,
   User,
 } from '../models';
@@ -40,6 +41,7 @@ interface CreateContractInput {
   name: string;
   description?: string | null;
   customer_id: number;
+  project_id: number;
   contract_type: 'AMC' | 'Service' | 'Subscription';
   status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
   start_date: string;
@@ -60,6 +62,7 @@ const MAX_CONTRACT_NUMBER_RETRIES = 3;
 
 const contractInclude = [
   { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
+  { model: Project, as: 'project', attributes: ['id', 'project_number', 'project_name', 'status', 'customer_id'] },
   {
     model: ContractItem,
     as: 'lineItems',
@@ -194,6 +197,11 @@ export const createContract = async (data: CreateContractInput) => {
   try {
     const customer = await Customer.findByPk(data.customer_id, { attributes: ['id'] });
     if (!customer) return { success: false, message: 'Customer not found', statusCode: 404 };
+    const project = await Project.findByPk(data.project_id, { attributes: ['id', 'customer_id'] });
+    if (!project) return { success: false, message: 'Project not found', statusCode: 404 };
+    if ((project as any).customer_id !== data.customer_id) {
+      return { success: false, message: 'Project does not belong to the provided customer', statusCode: 400 };
+    }
 
     const contractName = data.name.trim();
     const contractDescription = data.description?.trim() ? data.description.trim() : null;
@@ -213,6 +221,7 @@ export const createContract = async (data: CreateContractInput) => {
               name: contractName,
               description: contractDescription,
               customer_id: data.customer_id,
+              project_id: data.project_id,
               contract_number: contractNumber,
               contract_type: data.contract_type,
               status: data.status ?? 'Draft',
@@ -252,6 +261,7 @@ export const getContracts = async (
   limit = 20,
   filters?: {
     customer_id?: number;
+    project_id?: number;
     contract_number?: string;
     contract_type?: 'AMC' | 'Service' | 'Subscription';
     status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
@@ -262,6 +272,7 @@ export const getContracts = async (
     const where: any = {};
 
     if (filters?.customer_id != null) where.customer_id = filters.customer_id;
+    if (filters?.project_id != null) where.project_id = filters.project_id;
     if (filters?.contract_type) where.contract_type = filters.contract_type;
     if (filters?.status) where.status = filters.status;
     if (filters?.contract_number) {
@@ -351,6 +362,20 @@ export const updateContract = async (id: number, updates: UpdateContractInput) =
     if (updates.customer_id != null) {
       const customer = await Customer.findByPk(updates.customer_id, { attributes: ['id'] });
       if (!customer) return { success: false, message: 'Customer not found', statusCode: 404 };
+    }
+    if (updates.project_id != null) {
+      const project = await Project.findByPk(updates.project_id, { attributes: ['id'] });
+      if (!project) return { success: false, message: 'Project not found', statusCode: 404 };
+    }
+
+    const nextCustomerId = updates.customer_id ?? (contract as any).customer_id;
+    const nextProjectId = updates.project_id ?? (contract as any).project_id;
+    if (nextProjectId != null) {
+      const nextProject = await Project.findByPk(nextProjectId, { attributes: ['id', 'customer_id'] });
+      if (!nextProject) return { success: false, message: 'Project not found', statusCode: 404 };
+      if ((nextProject as any).customer_id !== nextCustomerId) {
+        return { success: false, message: 'Project does not belong to the provided customer', statusCode: 400 };
+      }
     }
 
     if (updates.contract_number) {

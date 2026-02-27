@@ -27,12 +27,14 @@ export const list = async (req: Request, res: Response) => {
     const page = parseInt((req.query.page as string) || '1', 10);
     const limit = parseInt((req.query.limit as string) || '20', 10);
     const customer_id = req.query.customer_id ? parseInt(req.query.customer_id as string, 10) : undefined;
+    const project_id = req.query.project_id ? parseInt(req.query.project_id as string, 10) : undefined;
     const contract_number = (req.query.contract_number as string) || undefined;
     const contract_type = (req.query.contract_type as 'AMC' | 'Service' | 'Subscription') || undefined;
     const status = (req.query.status as 'Draft' | 'Active' | 'Expired' | 'Terminated') || undefined;
 
     const result = await getContracts(page, limit, {
       customer_id,
+      project_id,
       contract_number,
       contract_type,
       status,

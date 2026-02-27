@@ -6,6 +6,7 @@ class Contract extends Model {
   public name!: string;
   public description?: string;
   public customer_id!: number;
+  public project_id!: number | null;
   public contract_number!: string;
   public contract_type!: 'AMC' | 'Service' | 'Subscription';
   public status!: 'Draft' | 'Active' | 'Expired' | 'Terminated';
@@ -40,6 +41,16 @@ Contract.init(
         key: 'id',
       },
       onDelete: 'RESTRICT',
+      onUpdate: 'CASCADE',
+    },
+    project_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'projects',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
     },
     contract_number: {

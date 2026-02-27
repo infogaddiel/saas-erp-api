@@ -91,6 +91,10 @@ Contract.hasMany(TicketService, { foreignKey: 'contract_id', as: 'ticketServices
 Contract.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 Customer.hasMany(Contract, { foreignKey: 'customer_id', as: 'contracts' });
 
+// Contract - Project
+Contract.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+Project.hasMany(Contract, { foreignKey: 'project_id', as: 'contracts' });
+
 // ContractItem - Contract
 ContractItem.belongsTo(Contract, { foreignKey: 'contract_id', as: 'contract' });
 Contract.hasMany(ContractItem, { foreignKey: 'contract_id', as: 'lineItems' });
