@@ -31,7 +31,6 @@ Item.init(
     item_code: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true,
     },
     item_name: {
       type: DataTypes.STRING(255),

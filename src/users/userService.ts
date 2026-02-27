@@ -67,9 +67,11 @@ export const createUser = async (data: CreateUserInput) => {
   }
 };
 
-export const getUsers = async (page = 1, limit = 20, userId?: number) => {
+export const getUsers = async (page = 1, limit = 20, userId?: number, roleId: number = 1) => {
   try {
     const offset = (page - 1) * limit;
+    const roleData: any = await getRoleDetails(roleId);
+    console.log(roleData.data);
     const { count, rows } = await User.findAndCountAll({
       offset,
       limit,
@@ -77,7 +79,7 @@ export const getUsers = async (page = 1, limit = 20, userId?: number) => {
       order: [['id', 'DESC']],
       include: [
         { model: Company, as: 'company', attributes: ['id', 'name'] },
-        { model: Role, as: 'role', attributes: ['id', 'type'] },
+        { model: Role, as: 'role', attributes: ['id', 'type'], where: { level: { [Op.gt]: Number(roleData.data.level) } } },
         {
           model: Permission,
           as: 'permissions',
@@ -86,7 +88,7 @@ export const getUsers = async (page = 1, limit = 20, userId?: number) => {
         },
       ],
       attributes: { exclude: ['password'] },
-      where: { role_id: { [Op.ne]: 1}, id: {[Op.ne]: userId} }, // Exclude users without a role
+      where: { role_id: { [Op.ne]: 1 }, id: { [Op.ne]: userId } }, // Exclude users without a role
     });
 
     const totalPages = Math.ceil(count / limit);
@@ -296,5 +298,15 @@ export const getDashboardSummary = async (companyId: number) => {
   } catch (error) {
     console.error('getDashboardSummary error:', error);
     return { success: false, message: 'Error fetching dashboard summary' };
+  }
+};
+
+export const getRoleDetails = async (roleId: number) => {
+  try {
+    const role = await Role.findByPk(roleId);
+    return { success: true, data: role };
+  } catch (e) {
+    console.error('getUserById error:', e);
+    return { success: false, message: 'Error fetching role' };
   }
 };

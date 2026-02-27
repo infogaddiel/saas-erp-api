@@ -156,7 +156,7 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[],user_id:numbe
       data: { count: items.length, items },
     };
   } catch (error) {
-    return { success: false, message: 'Error creating items in bulk' };
+    return { success: false, message: 'Error creating items in bulk '+ error };
   }
 };
 

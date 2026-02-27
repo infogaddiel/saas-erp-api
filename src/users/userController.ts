@@ -28,9 +28,9 @@ export const list = async (req: Request, res: Response) => {
     const page = parseInt((req.query.page as string) || '1', 10);
     const limit = parseInt((req.query.limit as string) || '20', 10);
     const userId = (req as any).user?.id;
-    console.log('List users controller - userId:', userId);
+    const roleId = (req as any).user?.role_id;
 
-    const result = await getUsers(page, limit, userId);
+    const result = await getUsers(page, limit, userId,roleId);
     if (!result.success) return res.status(500).json(result);
 
     return res.status(200).json(result);
