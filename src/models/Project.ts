@@ -29,7 +29,6 @@ Project.init(
     project_number: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true,
     },
     project_name: {
       type: DataTypes.STRING(255),
