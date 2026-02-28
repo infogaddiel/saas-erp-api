@@ -56,7 +56,6 @@ Contract.init(
     contract_number: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true,
     },
     contract_type: {
       type: DataTypes.ENUM('AMC', 'Service', 'Subscription'),
