@@ -16,6 +16,8 @@ import ContractItem from './ContractItem';
 import ServiceSchedule from './ServiceSchedule';
 import ContractInvoice from './ContractInvoice';
 import Project from './Project';
+import Lead from './Lead';
+import LeadStatus from './LeadStatus';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -123,6 +125,14 @@ User.hasMany(Project, { foreignKey: 'created_by', as: 'projects' });
 Project.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 Customer.hasMany(Project, { foreignKey: 'customer_id', as: 'projects' });
 
+// Lead - LeadStatus
+Lead.belongsTo(LeadStatus, { foreignKey: 'lead_status_id', as: 'leadStatus' });
+LeadStatus.hasMany(Lead, { foreignKey: 'lead_status_id', as: 'leads' });
+
+// Lead - User (created_by)
+Lead.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+User.hasMany(Lead, { foreignKey: 'created_by', as: 'leads' });
+
 export {
   User,
   Company,
@@ -142,4 +152,6 @@ export {
   ServiceSchedule,
   ContractInvoice,
   Project,
+  Lead,
+  LeadStatus,
 };

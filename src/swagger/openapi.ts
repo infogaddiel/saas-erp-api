@@ -63,6 +63,17 @@ import {
   projectDropdownSchema,
   idParamSchema as projectIdParamSchema,
 } from '../projects/projectValidator';
+import {
+  createLeadSchema,
+  updateLeadSchema,
+  listLeadsSchema,
+  leadDropdownSchema,
+  createLeadStatusSchema,
+  updateLeadStatusSchema,
+  listLeadStatusesSchema,
+  leadStatusDropdownSchema,
+  idParamSchema as leadIdParamSchema,
+} from '../leads/leadValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -935,6 +946,142 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/leads': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create lead',
+        tags: ['Leads'],
+        requestBody: jsonRequestBody(createLeadSchema),
+        responses: {
+          201: successResponse('Lead created'),
+          200: successResponse('Lead created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List leads',
+        tags: ['Leads'],
+        parameters: makeParameters(listLeadsSchema, 'query'),
+        responses: {
+          200: successResponse('Leads fetched'),
+        },
+      })
+    ),
+  },
+  '/api/leads/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get lead dropdown options',
+        tags: ['Leads'],
+        parameters: makeParameters(leadDropdownSchema, 'query'),
+        responses: {
+          200: successResponse('Lead dropdown fetched'),
+        },
+      })
+    ),
+  },
+  '/api/leads/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get lead by id',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Lead fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update lead',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateLeadSchema),
+        responses: {
+          200: successResponse('Lead updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete lead',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Lead deleted'),
+        },
+      })
+    ),
+  },
+  '/api/leads/statuses': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create lead status',
+        tags: ['Leads'],
+        requestBody: jsonRequestBody(createLeadStatusSchema),
+        responses: {
+          201: successResponse('Lead status created'),
+          200: successResponse('Lead status created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List lead statuses',
+        tags: ['Leads'],
+        parameters: makeParameters(listLeadStatusesSchema, 'query'),
+        responses: {
+          200: successResponse('Lead statuses fetched'),
+        },
+      })
+    ),
+  },
+  '/api/leads/statuses/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get lead status dropdown options',
+        tags: ['Leads'],
+        parameters: makeParameters(leadStatusDropdownSchema, 'query'),
+        responses: {
+          200: successResponse('Lead status dropdown fetched'),
+        },
+      })
+    ),
+  },
+  '/api/leads/statuses/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get lead status by id',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Lead status fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update lead status',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateLeadStatusSchema),
+        responses: {
+          200: successResponse('Lead status updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete lead status',
+        tags: ['Leads'],
+        parameters: makeParameters(leadIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Lead status deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -989,6 +1136,7 @@ export const openApiSpec = {
     { name: 'Tickets' },
     { name: 'Contracts' },
     { name: 'Projects' },
+    { name: 'Leads' },
     { name: 'Uploads' },
   ],
   components: {
