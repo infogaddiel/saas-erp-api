@@ -11,7 +11,9 @@ import {
   remove,
   removeStatus,
   statusDropdown,
+  statusHistory,
   update,
+  updateCurrentStatus,
   updateStatus,
 } from './leadController';
 import {
@@ -23,6 +25,7 @@ import {
   listLeadsSchema,
   listLeadStatusesSchema,
   updateLeadSchema,
+  updateLeadCurrentStatusSchema,
   updateLeadStatusSchema,
 } from './leadValidator';
 
@@ -31,6 +34,13 @@ const router = Router();
 router.post('/', validateRequest(createLeadSchema, 'body'), create);
 router.get('/dropdown', validateRequest(leadDropdownSchema, 'query'), dropdown);
 router.get('/', validateRequest(listLeadsSchema, 'query'), list);
+router.get('/:id/status-history', validateRequest(idParamSchema, 'params'), statusHistory);
+router.put(
+  '/:id/status',
+  validateRequest(idParamSchema, 'params'),
+  validateRequest(updateLeadCurrentStatusSchema, 'body'),
+  updateCurrentStatus
+);
 
 router.post('/statuses', validateRequest(createLeadStatusSchema, 'body'), createStatus);
 router.get('/statuses/dropdown', validateRequest(leadStatusDropdownSchema, 'query'), statusDropdown);

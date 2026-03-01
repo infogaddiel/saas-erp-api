@@ -1,5 +1,6 @@
+import sequelize from '../config/database';
 import { Op } from 'sequelize';
-import { Lead, LeadStatus, User } from '../models';
+import { Lead, LeadStatus, LeadStatusChangeHistory, User } from '../models';
 
 interface CreateLeadInput {
   title_of_lead: string;
@@ -13,7 +14,14 @@ interface CreateLeadInput {
   created_by?: number | null;
 }
 
-interface UpdateLeadInput extends Partial<CreateLeadInput> {}
+interface UpdateLeadInput extends Partial<CreateLeadInput> {
+  changed_by?: number | null;
+}
+
+interface UpdateLeadCurrentStatusInput {
+  lead_status_id: number;
+  changed_by?: number | null;
+}
 
 interface CreateLeadStatusInput {
   name: string;
@@ -31,6 +39,27 @@ const leadInclude = [
   { model: LeadStatus, as: 'leadStatus', attributes: ['id', 'name'] },
   { model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] },
 ];
+
+const leadStatusHistoryInclude = [
+  { model: LeadStatus, as: 'status', attributes: ['id', 'name'] },
+  { model: User, as: 'changedBy', attributes: ['id', 'name', 'email'] },
+];
+
+const createLeadStatusHistory = async (
+  leadId: number,
+  statusId: number,
+  changedBy?: number | null,
+  transaction?: any
+) => {
+  await LeadStatusChangeHistory.create(
+    {
+      lead_id: leadId,
+      status_id: statusId,
+      changed_by: changedBy ?? null,
+    },
+    { transaction }
+  );
+};
 
 export const createLead = async (data: CreateLeadInput) => {
   try {
@@ -153,30 +182,92 @@ export const getLeadById = async (id: number) => {
 
 export const updateLead = async (id: number, updates: UpdateLeadInput) => {
   try {
-    const lead = await Lead.findByPk(id);
-    if (!lead) return { success: false, message: 'Lead not found' };
+    const changedBy = updates.changed_by ?? null;
+    await sequelize.transaction(async (transaction) => {
+      const lead = await Lead.findByPk(id, { transaction });
+      if (!lead) throw new Error('Lead not found');
 
-    if (updates.lead_status_id != null) {
-      const status = await LeadStatus.findByPk(updates.lead_status_id, { attributes: ['id'] });
-      if (!status) return { success: false, message: 'Lead status not found', statusCode: 404 };
-    }
+      if (updates.lead_status_id != null) {
+        const status = await LeadStatus.findByPk(updates.lead_status_id, { attributes: ['id'], transaction });
+        if (!status) throw new Error('Lead status not found');
+      }
 
-    const payload: any = { ...updates };
-    if (updates.title_of_lead !== undefined) payload.title_of_lead = updates.title_of_lead.trim();
-    if (updates.contact_person !== undefined) payload.contact_person = updates.contact_person.trim();
-    if (updates.contact_no !== undefined) payload.contact_no = updates.contact_no.trim();
-    if (updates.company_name !== undefined) payload.company_name = normalizeOptionalText(updates.company_name);
-    if (updates.address !== undefined) payload.address = normalizeOptionalText(updates.address);
-    if (updates.lead_source !== undefined) payload.lead_source = normalizeOptionalText(updates.lead_source);
-    if (updates.product_required !== undefined) payload.product_required = normalizeOptionalText(updates.product_required);
+      const previousStatusId = lead.lead_status_id;
+      const payload: any = { ...updates };
+      delete payload.changed_by;
 
-    await lead.update(payload);
+      if (updates.title_of_lead !== undefined) payload.title_of_lead = updates.title_of_lead.trim();
+      if (updates.contact_person !== undefined) payload.contact_person = updates.contact_person.trim();
+      if (updates.contact_no !== undefined) payload.contact_no = updates.contact_no.trim();
+      if (updates.company_name !== undefined) payload.company_name = normalizeOptionalText(updates.company_name);
+      if (updates.address !== undefined) payload.address = normalizeOptionalText(updates.address);
+      if (updates.lead_source !== undefined) payload.lead_source = normalizeOptionalText(updates.lead_source);
+      if (updates.product_required !== undefined) payload.product_required = normalizeOptionalText(updates.product_required);
+
+      await lead.update(payload, { transaction });
+
+      if (payload.lead_status_id !== undefined && payload.lead_status_id !== previousStatusId) {
+        await createLeadStatusHistory(id, payload.lead_status_id, changedBy, transaction);
+      }
+    });
 
     const withAssociations = await Lead.findByPk(id, { include: leadInclude });
     return { success: true, data: withAssociations };
-  } catch (error) {
+  } catch (error: any) {
     console.error('updateLead error:', error);
+    if (error?.message === 'Lead not found') return { success: false, message: 'Lead not found' };
+    if (error?.message === 'Lead status not found') {
+      return { success: false, message: 'Lead status not found', statusCode: 404 };
+    }
     return { success: false, message: 'Error updating lead' };
+  }
+};
+
+export const updateLeadCurrentStatus = async (id: number, updates: UpdateLeadCurrentStatusInput) => {
+  try {
+    await sequelize.transaction(async (transaction) => {
+      const lead = await Lead.findByPk(id, { transaction });
+      if (!lead) throw new Error('Lead not found');
+
+      const status = await LeadStatus.findByPk(updates.lead_status_id, { attributes: ['id'], transaction });
+      if (!status) throw new Error('Lead status not found');
+
+      if (lead.lead_status_id === updates.lead_status_id) return;
+
+      await lead.update({ lead_status_id: updates.lead_status_id }, { transaction });
+      await createLeadStatusHistory(id, updates.lead_status_id, updates.changed_by, transaction);
+    });
+
+    const withAssociations = await Lead.findByPk(id, { include: leadInclude });
+    return { success: true, data: withAssociations };
+  } catch (error: any) {
+    console.error('updateLeadCurrentStatus error:', error);
+    if (error?.message === 'Lead not found') return { success: false, message: 'Lead not found' };
+    if (error?.message === 'Lead status not found') {
+      return { success: false, message: 'Lead status not found', statusCode: 404 };
+    }
+    return { success: false, message: 'Error updating lead status' };
+  }
+};
+
+export const getLeadStatusChangeHistory = async (leadId: number) => {
+  try {
+    const lead = await Lead.findByPk(leadId, { attributes: ['id'] });
+    if (!lead) return { success: false, message: 'Lead not found' };
+
+    const history = await LeadStatusChangeHistory.findAll({
+      where: { lead_id: leadId },
+      order: [
+        ['changed_at', 'DESC'],
+        ['id', 'DESC'],
+      ],
+      include: leadStatusHistoryInclude,
+    });
+
+    return { success: true, data: history };
+  } catch (error) {
+    console.error('getLeadStatusChangeHistory error:', error);
+    return { success: false, message: 'Error fetching lead status history' };
   }
 };
 

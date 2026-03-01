@@ -134,6 +134,48 @@ export const createProject = async (data: CreateProjectInput) => {
   }
 };
 
+export const bulkCreateProjects = async (dataArray: CreateProjectInput[], userId: number | null | undefined) => {
+  try {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
+      return { success: false, message: 'Invalid data: Expected non-empty array' };
+    }
+
+    const projects: any[] = [];
+
+    for (let index = 0; index < dataArray.length; index += 1) {
+      const input = dataArray[index];
+      const created = await createProject({
+        ...input,
+        created_by: input.created_by ?? userId ?? null,
+      });
+
+      if (!created.success) {
+        return {
+          success: false,
+          message: created.message ?? 'Error creating project',
+          statusCode: (created as any).statusCode,
+          data: {
+            failedIndex: index,
+            failedProject: input,
+            createdCount: projects.length,
+          },
+        };
+      }
+
+      projects.push(created.data);
+    }
+
+    return {
+      success: true,
+      message: `${projects.length} projects created successfully`,
+      data: { count: projects.length, projects },
+    };
+  } catch (error) {
+    console.error('bulkCreateProjects error:', error);
+    return { success: false, message: 'Error creating projects in bulk' };
+  }
+};
+
 export const getProjects = async (
   page = 1,
   limit = 20,

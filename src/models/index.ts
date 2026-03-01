@@ -18,6 +18,7 @@ import ContractInvoice from './ContractInvoice';
 import Project from './Project';
 import Lead from './Lead';
 import LeadStatus from './LeadStatus';
+import LeadStatusChangeHistory from './LeadStatusChangeHistory';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -133,6 +134,18 @@ LeadStatus.hasMany(Lead, { foreignKey: 'lead_status_id', as: 'leads' });
 Lead.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(Lead, { foreignKey: 'created_by', as: 'leads' });
 
+// LeadStatusChangeHistory - Lead
+LeadStatusChangeHistory.belongsTo(Lead, { foreignKey: 'lead_id', as: 'lead' });
+Lead.hasMany(LeadStatusChangeHistory, { foreignKey: 'lead_id', as: 'statusHistory' });
+
+// LeadStatusChangeHistory - LeadStatus
+LeadStatusChangeHistory.belongsTo(LeadStatus, { foreignKey: 'status_id', as: 'status' });
+LeadStatus.hasMany(LeadStatusChangeHistory, { foreignKey: 'status_id', as: 'history' });
+
+// LeadStatusChangeHistory - User (changed_by)
+LeadStatusChangeHistory.belongsTo(User, { foreignKey: 'changed_by', as: 'changedBy' });
+User.hasMany(LeadStatusChangeHistory, { foreignKey: 'changed_by', as: 'leadStatusChanges' });
+
 export {
   User,
   Company,
@@ -154,4 +167,5 @@ export {
   Project,
   Lead,
   LeadStatus,
+  LeadStatusChangeHistory,
 };

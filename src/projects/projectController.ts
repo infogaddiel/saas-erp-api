@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import {
+  bulkCreateProjects,
   createProject,
   deleteProject,
   getProjectById,
@@ -28,6 +29,28 @@ export const create = async (req: Request, res: Response) => {
     return res.status(201).json(result);
   } catch (error) {
     console.error('Create project controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const bulkCreate = async (req: Request, res: Response) => {
+  try {
+    const { projects } = req.body;
+    const userId = getUserId(req);
+
+    if (!Array.isArray(projects)) {
+      return res.status(400).json({ success: false, message: 'Expected "projects" array in body' });
+    }
+
+    const result = await bulkCreateProjects(projects, userId);
+    if (!result.success) {
+      const statusCode = (result as any).statusCode ?? 400;
+      return res.status(statusCode).json(result);
+    }
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Bulk create projects controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

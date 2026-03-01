@@ -22,6 +22,10 @@ export const updateLeadSchema = Joi.object({
   product_required: Joi.string().trim().max(5000).optional().allow(null, ''),
 }).min(1);
 
+export const updateLeadCurrentStatusSchema = Joi.object({
+  lead_status_id: Joi.number().integer().positive().required(),
+});
+
 export const listLeadsSchema = Joi.object({
   page: Joi.number().integer().min(1).optional().default(1),
   limit: Joi.number().integer().min(1).max(100).optional().default(20),

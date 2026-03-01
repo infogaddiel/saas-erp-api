@@ -17,7 +17,7 @@ const dateSchema = Joi.string()
   }, 'dd-mm-yyyy date validation')
   .messages({ 'date.invalid': 'date must be a valid date in dd-mm-yyyy format' });
 
-export const createProjectSchema = Joi.object({
+const projectPayloadSchema = Joi.object({
   project_name: Joi.string().trim().min(1).max(255).required(),
   customer_id: Joi.number().integer().positive().required(),
   project_manager: Joi.string().trim().max(255).optional().allow(null, ''),
@@ -41,6 +41,8 @@ export const createProjectSchema = Joi.object({
   }
   return value;
 });
+
+export const createProjectSchema = projectPayloadSchema;
 
 export const updateProjectSchema = Joi.object({
   project_name: Joi.string().trim().min(1).max(255).optional(),
@@ -90,4 +92,8 @@ export const projectDropdownSchema = Joi.object({
 
 export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
+});
+
+export const bulkCreateProjectsSchema = Joi.object({
+  projects: Joi.array().items(projectPayloadSchema).min(1).required(),
 });

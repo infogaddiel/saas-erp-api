@@ -57,6 +57,7 @@ import {
   idParamSchema as contractIdParamSchema,
 } from '../contracts/contractValidator';
 import {
+  bulkCreateProjectsSchema,
   createProjectSchema,
   updateProjectSchema,
   listProjectsSchema,
@@ -70,6 +71,7 @@ import {
   leadDropdownSchema,
   createLeadStatusSchema,
   updateLeadStatusSchema,
+  updateLeadCurrentStatusSchema,
   listLeadStatusesSchema,
   leadStatusDropdownSchema,
   idParamSchema as leadIdParamSchema,
@@ -897,6 +899,19 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(listProjectsSchema, 'query'),
         responses: {
           200: successResponse('Projects fetched'),
+        },
+      })
+    ),
+  },
+  '/api/projects/bulk/create': {
+    post: protectedOperation(
+      operation({
+        summary: 'Bulk create projects',
+        tags: ['Projects'],
+        requestBody: jsonRequestBody(bulkCreateProjectsSchema),
+        responses: {
+          201: successResponse('Projects created'),
+          200: successResponse('Projects created'),
         },
       })
     ),

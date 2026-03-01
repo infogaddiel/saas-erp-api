@@ -10,7 +10,9 @@ import {
   getLeadStatusById,
   getLeadStatuses,
   getLeadStatusesForDropdown,
+  getLeadStatusChangeHistory,
   updateLead,
+  updateLeadCurrentStatus,
   updateLeadStatus,
 } from './leadService';
 
@@ -101,7 +103,10 @@ export const getById = async (req: Request, res: Response) => {
 export const update = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const result = await updateLead(id, req.body);
+    const result = await updateLead(id, {
+      ...req.body,
+      changed_by: getUserId(req),
+    });
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? (result.message === 'Lead not found' ? 404 : 500);
       return res.status(statusCode).json(result);
@@ -109,6 +114,36 @@ export const update = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Update lead controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const updateCurrentStatus = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const result = await updateLeadCurrentStatus(id, {
+      lead_status_id: req.body.lead_status_id,
+      changed_by: getUserId(req),
+    });
+    if (!result.success) {
+      const statusCode = (result as any).statusCode ?? (result.message === 'Lead not found' ? 404 : 500);
+      return res.status(statusCode).json(result);
+    }
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Update lead current status controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const statusHistory = async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const result = await getLeadStatusChangeHistory(id);
+    if (!result.success) return res.status(result.message === 'Lead not found' ? 404 : 500).json(result);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Lead status history controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };
