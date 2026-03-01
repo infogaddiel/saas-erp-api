@@ -17,6 +17,13 @@ const dateSchema = Joi.string()
   }, 'dd-mm-yyyy date validation')
   .messages({ 'date.invalid': 'date must be a valid date in dd-mm-yyyy format' });
 
+const projectDocumentSchema = Joi.object({
+  document_name: Joi.string().trim().min(1).max(255).required(),
+  document_url: Joi.string().trim().min(1).max(2048).required(),
+  document_type: Joi.string().trim().max(100).optional().allow(null, ''),
+  notes: Joi.string().trim().max(10000).optional().allow(null, ''),
+});
+
 const projectPayloadSchema = Joi.object({
   project_name: Joi.string().trim().min(1).max(255).required(),
   customer_id: Joi.number().integer().positive().required(),
@@ -30,6 +37,7 @@ const projectPayloadSchema = Joi.object({
     .default('Planning'),
   description: Joi.string().trim().max(10000).optional().allow(null, ''),
   notes: Joi.string().trim().max(10000).optional().allow(null, ''),
+  documents: Joi.array().items(projectDocumentSchema).optional().default([]),
 }).custom((value, helpers) => {
   if (!value.start_date || !value.end_date) return value;
   const [sd, sm, sy] = value.start_date.split('-').map(Number);
@@ -56,6 +64,7 @@ export const updateProjectSchema = Joi.object({
     .optional(),
   description: Joi.string().trim().max(10000).optional().allow(null, ''),
   notes: Joi.string().trim().max(10000).optional().allow(null, ''),
+  documents: Joi.array().items(projectDocumentSchema).optional(),
 })
   .min(1)
   .custom((value, helpers) => {

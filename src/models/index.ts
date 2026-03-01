@@ -16,6 +16,7 @@ import ContractItem from './ContractItem';
 import ServiceSchedule from './ServiceSchedule';
 import ContractInvoice from './ContractInvoice';
 import Project from './Project';
+import ProjectFile from './ProjectFile';
 import Lead from './Lead';
 import LeadStatus from './LeadStatus';
 import LeadStatusChangeHistory from './LeadStatusChangeHistory';
@@ -126,6 +127,10 @@ User.hasMany(Project, { foreignKey: 'created_by', as: 'projects' });
 Project.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
 Customer.hasMany(Project, { foreignKey: 'customer_id', as: 'projects' });
 
+// Project - ProjectFile
+ProjectFile.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+Project.hasMany(ProjectFile, { foreignKey: 'project_id', as: 'documents' });
+
 // Lead - LeadStatus
 Lead.belongsTo(LeadStatus, { foreignKey: 'lead_status_id', as: 'leadStatus' });
 LeadStatus.hasMany(Lead, { foreignKey: 'lead_status_id', as: 'leads' });
@@ -165,6 +170,7 @@ export {
   ServiceSchedule,
   ContractInvoice,
   Project,
+  ProjectFile,
   Lead,
   LeadStatus,
   LeadStatusChangeHistory,

@@ -901,7 +901,7 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
   '/api/projects': {
     post: protectedOperation(
       operation({
-        summary: 'Create project',
+        summary: 'Create project (supports documents array)',
         tags: ['Projects'],
         requestBody: jsonRequestBody(createProjectSchema),
         responses: {
@@ -977,7 +977,7 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
     ),
     put: protectedOperation(
       operation({
-        summary: 'Update project',
+        summary: 'Update project (supports documents array)',
         tags: ['Projects'],
         parameters: makeParameters(projectIdParamSchema, 'path'),
         requestBody: jsonRequestBody(updateProjectSchema),

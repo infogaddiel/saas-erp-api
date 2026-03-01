@@ -1,7 +1,14 @@
 import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
-import { Company, Customer, Project, User } from '../models';
+import { Company, Customer, Project, ProjectFile, User } from '../models';
 import ExcelJS from 'exceljs';
+
+interface ProjectDocumentInput {
+  document_name: string;
+  document_url: string;
+  document_type?: string | null;
+  notes?: string | null;
+}
 
 interface CreateProjectInput {
   project_name: string;
@@ -13,6 +20,7 @@ interface CreateProjectInput {
   status?: 'Planning' | 'In Progress' | 'On Hold' | 'Completed' | 'Cancelled';
   description?: string | null;
   notes?: string | null;
+  documents?: ProjectDocumentInput[];
   created_by?: number | null;
 }
 
@@ -26,6 +34,7 @@ const MAX_PROJECT_NUMBER_RETRIES = 3;
 const projectInclude = [
   { model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] },
   { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
+  { model: ProjectFile, as: 'documents', attributes: ['id', 'document_name', 'document_url', 'document_type', 'notes', 'created_at', 'updated_at'] },
 ];
 
 const parseDate = (value: string | null | undefined): string | null => {
@@ -102,8 +111,9 @@ export const createProject = async (data: CreateProjectInput) => {
       try {
         created = await sequelize.transaction(async (transaction) => {
           const projectNumber = await generateNextProjectNumber(data.created_by, transaction);
+          const documents = Array.isArray(data.documents) ? data.documents : [];
 
-          return Project.create({
+          const project = await Project.create({
             project_number: projectNumber,
             project_name: data.project_name.trim(),
             customer_id: data.customer_id,
@@ -116,6 +126,21 @@ export const createProject = async (data: CreateProjectInput) => {
             notes: normalizeOptionalText(data.notes),
             created_by: data.created_by ?? null,
           }, { transaction });
+
+          if (documents.length > 0) {
+            await ProjectFile.bulkCreate(
+              documents.map((document) => ({
+                project_id: project.id,
+                document_name: document.document_name.trim(),
+                document_url: document.document_url.trim(),
+                document_type: normalizeOptionalText(document.document_type),
+                notes: normalizeOptionalText(document.notes),
+              })),
+              { transaction }
+            );
+          }
+
+          return project;
         });
 
         break;
@@ -288,6 +313,7 @@ export const updateProject = async (id: number, updates: UpdateProjectInput) => 
     }
 
     const payload: any = { ...updates };
+    delete payload.documents;
     if (updates.project_name !== undefined) payload.project_name = updates.project_name.trim();
     if (updates.project_manager !== undefined) payload.project_manager = normalizeOptionalText(updates.project_manager);
     if (updates.description !== undefined) payload.description = normalizeOptionalText(updates.description);
@@ -295,7 +321,27 @@ export const updateProject = async (id: number, updates: UpdateProjectInput) => 
     if (updates.start_date !== undefined) payload.start_date = parseDate(updates.start_date);
     if (updates.end_date !== undefined) payload.end_date = parseDate(updates.end_date);
 
-    await project.update(payload);
+    await sequelize.transaction(async (transaction) => {
+      await project.update(payload, { transaction });
+
+      if (updates.documents !== undefined) {
+        await ProjectFile.destroy({ where: { project_id: id }, transaction });
+
+        const nextDocuments = Array.isArray(updates.documents) ? updates.documents : [];
+        if (nextDocuments.length > 0) {
+          await ProjectFile.bulkCreate(
+            nextDocuments.map((document) => ({
+              project_id: id,
+              document_name: document.document_name.trim(),
+              document_url: document.document_url.trim(),
+              document_type: normalizeOptionalText(document.document_type),
+              notes: normalizeOptionalText(document.notes),
+            })),
+            { transaction }
+          );
+        }
+      }
+    });
 
     const withAssociations = await Project.findByPk(id, { include: projectInclude });
     return { success: true, data: withAssociations };
