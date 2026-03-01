@@ -1,5 +1,6 @@
 import sequelize from '../config/database';
 import { Op, Transaction, UniqueConstraintError } from 'sequelize';
+import ExcelJS from 'exceljs';
 import {
   Company,
   Contract,
@@ -450,5 +451,68 @@ export const deleteContract = async (id: number) => {
   } catch (error) {
     console.error('deleteContract error:', error);
     return { success: false, message: 'Error deleting contract' };
+  }
+};
+
+export const exportContractsToExcel = async () => {
+  try {
+    const contracts = await Contract.findAll({
+      include: [
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
+        { model: Project, as: 'project', attributes: ['id', 'project_number', 'project_name'] },
+      ],
+      order: [['id', 'ASC']],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Contracts');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Contract Number', key: 'contract_number', width: 18 },
+      { header: 'Name', key: 'name', width: 28 },
+      { header: 'Customer', key: 'customer_name', width: 24 },
+      { header: 'Project Number', key: 'project_number', width: 18 },
+      { header: 'Project Name', key: 'project_name', width: 28 },
+      { header: 'Type', key: 'contract_type', width: 16 },
+      { header: 'Status', key: 'status', width: 16 },
+      { header: 'Start Date', key: 'start_date', width: 14 },
+      { header: 'End Date', key: 'end_date', width: 14 },
+      { header: 'Total Value', key: 'total_value', width: 16 },
+      { header: 'Currency', key: 'currency', width: 12 },
+      { header: 'Description', key: 'description', width: 36 },
+      { header: 'Created At', key: 'created_at', width: 20 },
+    ];
+
+    contracts.forEach((contract: any) => {
+      worksheet.addRow({
+        id: contract.id,
+        contract_number: contract.contract_number,
+        name: contract.name,
+        customer_name: contract.customer?.name ?? 'N/A',
+        project_number: contract.project?.project_number ?? '',
+        project_name: contract.project?.project_name ?? '',
+        contract_type: contract.contract_type,
+        status: contract.status,
+        start_date: contract.start_date,
+        end_date: contract.end_date,
+        total_value: contract.total_value,
+        currency: contract.currency,
+        description: contract.description ?? '',
+        created_at: contract.created_at,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF2F5597' },
+    };
+
+    return { success: true, data: workbook };
+  } catch (error) {
+    console.error('exportContractsToExcel error:', error);
+    return { success: false, message: 'Error exporting contracts', data: null };
   }
 };

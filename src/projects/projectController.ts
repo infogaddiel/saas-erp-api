@@ -3,6 +3,7 @@ import {
   bulkCreateProjects,
   createProject,
   deleteProject,
+  exportProjectsToExcel,
   getProjectById,
   getProjects,
   getProjectsForDropdown,
@@ -134,6 +135,23 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete project controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (req: Request, res: Response) => {
+  try {
+    const result = await exportProjectsToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `projects-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export projects controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   createContract,
   deleteContract,
+  exportContractsToExcel,
   getContractById,
   getContracts,
   getContractsForDropdown,
@@ -94,6 +95,23 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete contract controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (req: Request, res: Response) => {
+  try {
+    const result = await exportContractsToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `contracts-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export contracts controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

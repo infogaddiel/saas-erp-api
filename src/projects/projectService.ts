@@ -1,6 +1,7 @@
 import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { Company, Customer, Project, User } from '../models';
+import ExcelJS from 'exceljs';
 
 interface CreateProjectInput {
   project_name: string;
@@ -314,5 +315,65 @@ export const deleteProject = async (id: number) => {
   } catch (error) {
     console.error('deleteProject error:', error);
     return { success: false, message: 'Error deleting project' };
+  }
+};
+
+export const exportProjectsToExcel = async () => {
+  try {
+    const projects = await Project.findAll({
+      include: projectInclude,
+      order: [['id', 'ASC']],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Projects');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Project Number', key: 'project_number', width: 20 },
+      { header: 'Project Name', key: 'project_name', width: 28 },
+      { header: 'Customer', key: 'customer_name', width: 24 },
+      { header: 'Project Manager', key: 'project_manager', width: 24 },
+      { header: 'Start Date', key: 'start_date', width: 14 },
+      { header: 'End Date', key: 'end_date', width: 14 },
+      { header: 'Budget', key: 'budget', width: 14 },
+      { header: 'Status', key: 'status', width: 16 },
+      { header: 'Description', key: 'description', width: 36 },
+      { header: 'Notes', key: 'notes', width: 36 },
+      { header: 'Created By', key: 'created_by_name', width: 24 },
+      { header: 'Created At', key: 'created_at', width: 20 },
+      { header: 'Updated At', key: 'updated_at', width: 20 },
+    ];
+
+    projects.forEach((project: any) => {
+      worksheet.addRow({
+        id: project.id,
+        project_number: project.project_number,
+        project_name: project.project_name,
+        customer_name: project.customer?.name ?? 'N/A',
+        project_manager: project.project_manager ?? '',
+        start_date: project.start_date,
+        end_date: project.end_date ?? '',
+        budget: project.budget,
+        status: project.status,
+        description: project.description ?? '',
+        notes: project.notes ?? '',
+        created_by_name: project.createdBy?.name ?? 'N/A',
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1F4E78' },
+    };
+
+    return { success: true, data: workbook };
+  } catch (error) {
+    console.error('exportProjectsToExcel error:', error);
+    return { success: false, message: 'Error exporting projects', data: null };
   }
 };

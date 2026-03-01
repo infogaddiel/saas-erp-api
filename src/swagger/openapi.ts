@@ -847,6 +847,24 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/contracts/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export contracts to Excel',
+        tags: ['Contracts'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
   '/api/contracts/{id}': {
     get: protectedOperation(
       operation({
@@ -912,6 +930,24 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         responses: {
           201: successResponse('Projects created'),
           200: successResponse('Projects created'),
+        },
+      })
+    ),
+  },
+  '/api/projects/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export projects to Excel',
+        tags: ['Projects'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
         },
       })
     ),
