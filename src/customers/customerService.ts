@@ -202,19 +202,121 @@ export const bulkCreateCustomers = async (dataArray: CreateCustomerInput[], user
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       return { success: false, message: 'Invalid data: Expected non-empty array' };
     }
-    const customerTypes = await CustomerType.findAll({ attributes: ['id', 'name'] });
 
-    const customers = await Customer.bulkCreate(
-      dataArray.map((data) => ({
-        name: data.name,
-        mobile: data.mobile ?? null,
-        email: data.email ?? null,
+    const customerTypes = await CustomerType.findAll({ attributes: ['id', 'name'] });
+    const customerTypeByName = new Map<string, number>();
+    const customerTypeIds = new Set<number>();
+    customerTypes.forEach((ct: any) => {
+      customerTypeByName.set(String(ct.name).trim().toLowerCase(), ct.id);
+      customerTypeIds.add(Number(ct.id));
+    });
+
+    const errors: Array<{ index: number; field: string; message: string }> = [];
+    const seenMobiles = new Set<string>();
+    const seenEmails = new Set<string>();
+
+    const normalizedRows = dataArray.map((data, index) => {
+      const mobile = data.mobile?.trim() ?? null;
+      const email = data.email?.trim() ?? null;
+      const type = data.type ?? 'Company';
+
+      if (!data.name || !String(data.name).trim()) {
+        errors.push({ index, field: 'name', message: 'name is required' });
+      }
+      if (!mobile) {
+        errors.push({ index, field: 'mobile', message: 'mobile is required' });
+      }
+      if (type !== 'Individual' && type !== 'Company') {
+        errors.push({ index, field: 'type', message: 'type must be Individual or Company' });
+      }
+
+      if (mobile) {
+        if (seenMobiles.has(mobile)) {
+          errors.push({ index, field: 'mobile', message: 'Duplicate mobile in request payload' });
+        } else {
+          seenMobiles.add(mobile);
+        }
+      }
+
+      if (email) {
+        const lowerEmail = email.toLowerCase();
+        if (seenEmails.has(lowerEmail)) {
+          errors.push({ index, field: 'email', message: 'Duplicate email in request payload' });
+        } else {
+          seenEmails.add(lowerEmail);
+        }
+      }
+
+      let resolvedCustomerTypeId: number | null = null;
+      if (data.customer_type_id != null) {
+        const typeId = Number(data.customer_type_id);
+        if (!customerTypeIds.has(typeId)) {
+          errors.push({ index, field: 'customer_type_id', message: `customer_type_id "${data.customer_type_id}" not found` });
+        } else {
+          resolvedCustomerTypeId = typeId;
+        }
+      } else if (data.customer_type) {
+        const mappedId = customerTypeByName.get(String(data.customer_type).trim().toLowerCase());
+        if (!mappedId) {
+          errors.push({ index, field: 'customer_type', message: `customer_type "${data.customer_type}" not found` });
+        } else {
+          resolvedCustomerTypeId = mappedId;
+        }
+      }
+
+      return {
+        name: String(data.name ?? '').trim(),
+        mobile,
+        email,
         address: data.address ?? null,
         ship_address: data.ship_address ?? null,
         gst_number: data.gst_number ?? null,
         pan_number: data.pan_number ?? null,
-        type: data.type ?? 'Company',
-        customer_type_id: data.customer_type_id ?? customerTypes.find(ct => ct.name === data.customer_type)?.id ?? null,
+        type,
+        customer_type_id: resolvedCustomerTypeId,
+      };
+    });
+
+    const mobileList = normalizedRows.map((row) => row.mobile).filter((value): value is string => Boolean(value));
+    if (mobileList.length > 0) {
+      const existingMobiles = await Customer.findAll({
+        where: { mobile: { [Op.in]: mobileList } },
+        attributes: ['mobile'],
+      });
+      const existingMobileSet = new Set((existingMobiles as any[]).map((row) => String(row.mobile)));
+      normalizedRows.forEach((row, index) => {
+        if (row.mobile && existingMobileSet.has(row.mobile)) {
+          errors.push({ index, field: 'mobile', message: `mobile "${row.mobile}" already exists` });
+        }
+      });
+    }
+
+    const emailList = normalizedRows.map((row) => row.email).filter((value): value is string => Boolean(value));
+    if (emailList.length > 0) {
+      const existingEmails = await Customer.findAll({
+        where: { email: { [Op.in]: emailList } },
+        attributes: ['email'],
+      });
+      const existingEmailSet = new Set((existingEmails as any[]).map((row) => String(row.email).toLowerCase()));
+      normalizedRows.forEach((row, index) => {
+        if (row.email && existingEmailSet.has(row.email.toLowerCase())) {
+          errors.push({ index, field: 'email', message: `email "${row.email}" already exists` });
+        }
+      });
+    }
+
+    if (errors.length > 0) {
+      return {
+        success: false,
+        message: 'Bulk validation failed',
+        statusCode: 400,
+        data: { errors },
+      };
+    }
+
+    const customers = await Customer.bulkCreate(
+      normalizedRows.map((row) => ({
+        ...row,
         created_by: userId,
       })),
       { validate: true }

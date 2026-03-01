@@ -131,6 +131,57 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[],user_id:numbe
       return { success: false, message: 'Invalid data: Expected non-empty array' };
     }
 
+    const errors: Array<{ index: number; field: string; message: string }> = [];
+    const seenCodes = new Set<string>();
+
+    dataArray.forEach((data, index) => {
+      const itemCode = String(data.item_code ?? '').trim();
+      const itemName = String(data.item_name ?? '').trim();
+
+      if (!itemCode) errors.push({ index, field: 'item_code', message: 'item_code is required' });
+      if (!itemName) errors.push({ index, field: 'item_name', message: 'item_name is required' });
+      if (data.unit_price == null || Number.isNaN(Number(data.unit_price)) || Number(data.unit_price) <= 0) {
+        errors.push({ index, field: 'unit_price', message: 'unit_price must be greater than 0' });
+      }
+
+      if (itemCode) {
+        const key = itemCode.toLowerCase();
+        if (seenCodes.has(key)) {
+          errors.push({ index, field: 'item_code', message: 'Duplicate item_code in request payload' });
+        } else {
+          seenCodes.add(key);
+        }
+      }
+    });
+
+    const uniqueCodes = dataArray
+      .map((data) => String(data.item_code ?? '').trim())
+      .filter((code) => code !== '');
+    if (uniqueCodes.length > 0) {
+      const existingItems = await Item.findAll({
+        where: { item_code: { [Op.in]: uniqueCodes } },
+        attributes: ['item_code'],
+      });
+
+      for (const existingItem of existingItems as any[]) {
+        const existingCode = String(existingItem.item_code || '');
+        dataArray.forEach((data, index) => {
+          if (String(data.item_code ?? '').trim() === existingCode) {
+            errors.push({ index, field: 'item_code', message: `item_code "${data.item_code}" already exists` });
+          }
+        });
+      }
+    }
+
+    if (errors.length > 0) {
+      return {
+        success: false,
+        message: 'Bulk validation failed',
+        statusCode: 400,
+        data: { errors },
+      };
+    }
+
     const items = await Item.bulkCreate(
       dataArray.map((data) => ({
         item_code: data.item_code,
@@ -156,7 +207,8 @@ export const bulkCreateItems = async (dataArray: CreateItemInput[],user_id:numbe
       data: { count: items.length, items },
     };
   } catch (error) {
-    return { success: false, message: 'Error creating items in bulk '+ error };
+    console.error('bulkCreateItems error:', error);
+    return { success: false, message: 'Error creating items in bulk' };
   }
 };
 

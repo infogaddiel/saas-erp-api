@@ -119,7 +119,10 @@ export const bulkCreate = async (req: Request, res: Response) => {
     }
     
     const result = await bulkCreateItems(items,parseInt(req.user?.id as string));
-    if (!result.success) return res.status(400).json(result);
+    if (!result.success) {
+      const statusCode = (result as any).statusCode ?? 400;
+      return res.status(statusCode).json(result);
+    }
 
     return res.status(201).json(result);
   } catch (error) {

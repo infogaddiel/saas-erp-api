@@ -165,31 +165,97 @@ export const bulkCreateProjects = async (dataArray: CreateProjectInput[], userId
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       return { success: false, message: 'Invalid data: Expected non-empty array' };
     }
+    const errors: Array<{ index: number; field: string; message: string }> = [];
 
-    const projects: any[] = [];
-
-    for (let index = 0; index < dataArray.length; index += 1) {
-      const input = dataArray[index];
-      const created = await createProject({
-        ...input,
-        created_by: input.created_by ?? userId ?? null,
-      });
-
-      if (!created.success) {
-        return {
-          success: false,
-          message: created.message ?? 'Error creating project',
-          statusCode: (created as any).statusCode,
-          data: {
-            failedIndex: index,
-            failedProject: input,
-            createdCount: projects.length,
-          },
-        };
+    dataArray.forEach((input, index) => {
+      if (!input.project_name || !String(input.project_name).trim()) {
+        errors.push({ index, field: 'project_name', message: 'project_name is required' });
+      }
+      if (input.customer_id == null || Number.isNaN(Number(input.customer_id)) || Number(input.customer_id) <= 0) {
+        errors.push({ index, field: 'customer_id', message: 'customer_id must be a positive number' });
+      }
+      if (!input.start_date || !parseDate(input.start_date)) {
+        errors.push({ index, field: 'start_date', message: 'start_date must be a valid date in dd-mm-yyyy format' });
+      }
+      if (input.end_date && !parseDate(input.end_date)) {
+        errors.push({ index, field: 'end_date', message: 'end_date must be a valid date in dd-mm-yyyy format' });
       }
 
-      projects.push(created.data);
+      const start = parseDate(input.start_date);
+      const end = parseDate(input.end_date);
+      if (start && end && new Date(start) > new Date(end)) {
+        errors.push({ index, field: 'end_date', message: 'end_date must be greater than or equal to start_date' });
+      }
+    });
+
+    const customerIds = [...new Set(dataArray.map((row) => Number(row.customer_id)).filter((id) => Number.isFinite(id) && id > 0))];
+    if (customerIds.length > 0) {
+      const existingCustomers = await Customer.findAll({ where: { id: { [Op.in]: customerIds } }, attributes: ['id'] });
+      const existingCustomerIds = new Set((existingCustomers as any[]).map((row) => Number(row.id)));
+      dataArray.forEach((input, index) => {
+        if (input.customer_id != null && !existingCustomerIds.has(Number(input.customer_id))) {
+          errors.push({ index, field: 'customer_id', message: `customer_id "${input.customer_id}" not found` });
+        }
+      });
     }
+
+    if (errors.length > 0) {
+      return {
+        success: false,
+        message: 'Bulk validation failed',
+        statusCode: 400,
+        data: { errors },
+      };
+    }
+
+    const projects = await sequelize.transaction(async (transaction) => {
+      const createdProjects: any[] = [];
+
+      for (let index = 0; index < dataArray.length; index += 1) {
+        const input = dataArray[index];
+        const projectNumber = await generateNextProjectNumber(input.created_by ?? userId ?? null, transaction);
+        const documents = Array.isArray(input.documents) ? input.documents : [];
+
+        const project = await Project.create(
+          {
+            project_number: projectNumber,
+            project_name: input.project_name.trim(),
+            customer_id: input.customer_id,
+            project_manager: normalizeOptionalText(input.project_manager),
+            start_date: parseDate(input.start_date),
+            end_date: parseDate(input.end_date),
+            budget: input.budget ?? 0,
+            status: input.status ?? 'Planning',
+            description: normalizeOptionalText(input.description),
+            notes: normalizeOptionalText(input.notes),
+            created_by: input.created_by ?? userId ?? null,
+          },
+          { transaction }
+        );
+
+        if (documents.length > 0) {
+          await ProjectFile.bulkCreate(
+            documents.map((document) => ({
+              project_id: project.id,
+              document_name: document.document_name.trim(),
+              document_url: document.document_url.trim(),
+              document_type: normalizeOptionalText(document.document_type),
+              notes: normalizeOptionalText(document.notes),
+            })),
+            { transaction }
+          );
+        }
+
+        createdProjects.push(project.id);
+      }
+
+      return Project.findAll({
+        where: { id: { [Op.in]: createdProjects } },
+        include: projectInclude,
+        order: [['id', 'DESC']],
+        transaction,
+      });
+    });
 
     return {
       success: true,

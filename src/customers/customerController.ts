@@ -129,7 +129,10 @@ export const bulkCreate = async (req: Request, res: Response) => {
     }
 
     const result = await bulkCreateCustomers(customers, userId);
-    if (!result.success) return res.status(400).json(result);
+    if (!result.success) {
+      const statusCode = (result as any).statusCode ?? 400;
+      return res.status(statusCode).json(result);
+    }
 
     return res.status(201).json(result);
   } catch (error) {
