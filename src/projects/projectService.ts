@@ -325,7 +325,10 @@ export const updateProject = async (id: number, updates: UpdateProjectInput) => 
       await project.update(payload, { transaction });
 
       if (updates.documents !== undefined) {
-        await ProjectFile.destroy({ where: { project_id: id }, transaction });
+        await ProjectFile.update(
+          { deleted_at: new Date() } as any,
+          { where: { project_id: id, deleted_at: null }, transaction }
+        );
 
         const nextDocuments = Array.isArray(updates.documents) ? updates.documents : [];
         if (nextDocuments.length > 0) {
@@ -356,7 +359,15 @@ export const deleteProject = async (id: number) => {
     const project = await Project.findByPk(id);
     if (!project) return { success: false, message: 'Project not found' };
 
-    await project.update({ deleted_at: new Date() } as any);
+    await sequelize.transaction(async (transaction) => {
+      await ProjectFile.update(
+        { deleted_at: new Date() } as any,
+        { where: { project_id: id, deleted_at: null }, transaction }
+      );
+
+      await project.update({ deleted_at: new Date() } as any, { transaction });
+    });
+
     return { success: true, message: 'Project deleted' };
   } catch (error) {
     console.error('deleteProject error:', error);

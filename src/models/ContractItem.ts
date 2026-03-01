@@ -10,6 +10,7 @@ class ContractItem extends Model {
   public unit_price!: number;
   public billing_frequency!: 'One-time' | 'Monthly' | 'Quarterly' | 'Semi-Annual' | 'Annual';
   public is_renewable!: boolean;
+  public deleted_at!: Date | null;
 }
 
 ContractItem.init(
@@ -61,11 +62,20 @@ ContractItem.init(
       allowNull: false,
       defaultValue: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'contract_items',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

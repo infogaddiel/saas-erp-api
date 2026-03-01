@@ -8,6 +8,7 @@ class ProjectFile extends Model {
   public document_url!: string;
   public document_type!: string | null;
   public notes!: string | null;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
 }
@@ -45,12 +46,21 @@ ProjectFile.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'project_files',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

@@ -8,6 +8,7 @@ class ContractInvoice extends Model {
   public amount_to_bill!: number;
   public invoice_reference!: string | null;
   public billing_status!: 'Pending' | 'Invoiced' | 'Paid';
+  public deleted_at!: Date | null;
 }
 
 ContractInvoice.init(
@@ -44,11 +45,20 @@ ContractInvoice.init(
       allowNull: false,
       defaultValue: 'Pending',
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'contract_invoices',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
   }
 );
 

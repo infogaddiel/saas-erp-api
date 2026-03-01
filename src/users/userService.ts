@@ -160,8 +160,8 @@ export const updateUser = async (id: number, updates: Partial<CreateUserInput>) 
 
     // Handle permissions update if menu_ids provided
     if (updates.menu_ids !== undefined) {
-      // Delete existing permissions for this user
-      await Permission.destroy({ where: { user_id: id } });
+      // Soft-delete existing permissions for this user
+      await Permission.update({ deleted_at: new Date() } as any, { where: { user_id: id, deleted_at: null } });
 
       // Add new permissions if menu_ids array is not empty
       if (Array.isArray(updates.menu_ids) && updates.menu_ids.length > 0) {

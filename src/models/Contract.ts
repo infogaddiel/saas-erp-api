@@ -14,6 +14,7 @@ class Contract extends Model {
   public end_date!: Date;
   public total_value!: number;
   public currency!: string;
+  public deleted_at!: Date | null;
   public readonly created_at!: Date;
 }
 
@@ -89,11 +90,20 @@ Contract.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     tableName: 'contracts',
     timestamps: false,
+    defaultScope: {
+      where: {
+        deleted_at: null,
+      },
+    },
     validate: {
       endDateAfterStartDate() {
         if (this.end_date && this.start_date && this.end_date < this.start_date) {

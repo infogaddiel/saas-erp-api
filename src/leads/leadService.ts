@@ -391,7 +391,7 @@ export const deleteLeadStatus = async (id: number) => {
       return { success: false, message: 'Lead status is used in leads', statusCode: 400 };
     }
 
-    await status.destroy();
+    await status.update({ deleted_at: new Date() } as any);
     return { success: true, message: 'Lead status deleted' };
   } catch (error) {
     console.error('deleteLeadStatus error:', error);

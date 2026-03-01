@@ -419,12 +419,18 @@ export const updateContract = async (id: number, updates: UpdateContractInput) =
       await contract.update(payload, { transaction });
 
       if (updates.line_items) {
-        await ContractItem.destroy({ where: { id: id }, transaction });
+        await ContractItem.update(
+          { deleted_at: new Date() } as any,
+          { where: { contract_id: id, deleted_at: null }, transaction }
+        );
         await createLineItemsAndSchedules(id, updates.line_items, transaction);
       }
 
       if (updates.invoices) {
-        await ContractInvoice.destroy({ where: { id: id }, transaction });
+        await ContractInvoice.update(
+          { deleted_at: new Date() } as any,
+          { where: { contract_id: id, deleted_at: null }, transaction }
+        );
         await createInvoices(id, updates.invoices, transaction);
       }
     });
@@ -443,8 +449,15 @@ export const deleteContract = async (id: number) => {
     if (!contract) return { success: false, message: 'Contract not found' };
 
     await sequelize.transaction(async (transaction) => {
-      await ContractInvoice.destroy({ where: { id: id }, transaction });
-      await contract.destroy({ transaction });
+      await ContractItem.update(
+        { deleted_at: new Date() } as any,
+        { where: { contract_id: id, deleted_at: null }, transaction }
+      );
+      await ContractInvoice.update(
+        { deleted_at: new Date() } as any,
+        { where: { contract_id: id, deleted_at: null }, transaction }
+      );
+      await contract.update({ deleted_at: new Date() } as any, { transaction });
     });
 
     return { success: true, message: 'Contract deleted' };
