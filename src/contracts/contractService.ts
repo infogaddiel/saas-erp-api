@@ -67,16 +67,18 @@ const contractInclude = [
   {
     model: ContractItem,
     as: 'lineItems',
+    required: false,
     include: [
       { model: Item, as: 'item', attributes: ['id', 'item_name', 'item_code'] },
       {
         model: ServiceSchedule,
         as: 'serviceSchedules',
+        required: false,
         include: [{ model: User, as: 'technician', attributes: ['id', 'name', 'email'] }],
       },
     ],
   },
-  { model: ContractInvoice, as: 'invoices' },
+  { model: ContractInvoice, as: 'invoices', required: false },
 ];
 
 const calculateTotalValue = (lineItems: CreateContractItemInput[]): number => {

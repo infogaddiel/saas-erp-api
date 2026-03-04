@@ -2,6 +2,7 @@ import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
 import { Company, Customer, Project, ProjectFile, User } from '../models';
 import ExcelJS from 'exceljs';
+import { required } from 'joi';
 
 interface ProjectDocumentInput {
   document_name: string;
@@ -34,7 +35,7 @@ const MAX_PROJECT_NUMBER_RETRIES = 3;
 const projectInclude = [
   { model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] },
   { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
-  { model: ProjectFile, as: 'documents', attributes: ['id', 'document_name', 'document_url', 'document_type', 'notes', 'created_at', 'updated_at'] },
+  { model: ProjectFile, as: 'documents', required:false, attributes: ['id', 'document_name', 'document_url', 'document_type', 'notes', 'created_at', 'updated_at'] },
 ];
 
 const parseDate = (value: string | null | undefined): string | null => {
