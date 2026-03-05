@@ -43,7 +43,7 @@ interface CreateContractInput {
   description?: string | null;
   customer_id: number;
   project_id: number;
-  contract_type: 'AMC' | 'Service' | 'Subscription';
+  contract_type: 'AMC-Daikin' | 'AMC-Semak' | 'Service' | 'Subscription';
   status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
   start_date: string;
   end_date: string;
@@ -266,7 +266,7 @@ export const getContracts = async (
     customer_id?: number;
     project_id?: number;
     contract_number?: string;
-    contract_type?: 'AMC' | 'Service' | 'Subscription';
+    contract_type?: 'AMC-Daikin' | 'AMC-Semak' | 'Service' | 'Subscription';
     status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
   }
 ) => {

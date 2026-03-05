@@ -59,7 +59,7 @@ Contract.init(
       allowNull: false,
     },
     contract_type: {
-      type: DataTypes.ENUM('AMC', 'Service', 'Subscription'),
+      type: DataTypes.ENUM('AMC-Daikin','AMC-Semak', 'Service', 'Subscription'),
       allowNull: false,
     },
     status: {
