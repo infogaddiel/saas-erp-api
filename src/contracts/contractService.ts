@@ -42,7 +42,7 @@ interface CreateContractInput {
   description?: string | null;
   customer_id: number;
   project_id: number;
-  contract_type: 'AMC' | 'Service' | 'Subscription';
+  contract_type: 'AMC-Daikin' | 'AMC-Semak' | 'Service' | 'Subscription';
   status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
   start_date: string;
   end_date: string;
@@ -65,16 +65,18 @@ const contractInclude = [
   {
     model: ContractItem.unscoped(),
     as: 'lineItems',
+    required: false,
     include: [
       { model: Item, as: 'item', attributes: ['id', 'item_name', 'item_code'] },
       {
         model: ServiceSchedule,
         as: 'serviceSchedules',
+        required: false,
         include: [{ model: User, as: 'technician', attributes: ['id', 'name', 'email'] }],
       },
     ],
   },
-  { model: ContractInvoice.unscoped(), as: 'invoices' },
+  { model: ContractInvoice, as: 'invoices', required: false },
 ];
 
 const calculateTotalValue = (lineItems: CreateContractItemInput[]): number => {
@@ -244,7 +246,7 @@ export const getContracts = async (
     customer_id?: number;
     project_id?: number;
     contract_number?: string;
-    contract_type?: 'AMC' | 'Service' | 'Subscription';
+    contract_type?: 'AMC-Daikin' | 'AMC-Semak' | 'Service' | 'Subscription';
     status?: 'Draft' | 'Active' | 'Expired' | 'Terminated';
   }
 ) => {

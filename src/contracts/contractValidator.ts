@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const CONTRACT_TYPES = ['AMC', 'Service', 'Subscription'] as const;
+const CONTRACT_TYPES = ['AMC-Daikin','AMC-Semak', 'Service', 'Subscription'] as const;
 const CONTRACT_STATUSES = ['Draft', 'Active', 'Expired', 'Terminated'] as const;
 const BILLING_FREQUENCIES = ['One-time', 'Monthly', 'Quarterly', 'Semi-Annual', 'Annual'] as const;
 const SERVICE_STATUSES = ['Scheduled', 'In-Progress', 'Completed', 'Cancelled'] as const;

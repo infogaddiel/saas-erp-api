@@ -37,7 +37,7 @@ export const list = async (req: Request, res: Response) => {
     const customer_id = req.query.customer_id ? parseInt(req.query.customer_id as string, 10) : undefined;
     const project_id = req.query.project_id ? parseInt(req.query.project_id as string, 10) : undefined;
     const contract_number = (req.query.contract_number as string) || undefined;
-    const contract_type = (req.query.contract_type as 'AMC' | 'Service' | 'Subscription') || undefined;
+    const contract_type = (req.query.contract_type as 'AMC-Daikin' | 'AMC-Semak' | 'Service' | 'Subscription') || undefined;
     const status = (req.query.status as 'Draft' | 'Active' | 'Expired' | 'Terminated') || undefined;
 
     const result = await getContracts(page, limit, {
