@@ -13,6 +13,7 @@ import companyRoutes from './companies/companies';
 import contractRoutes from './contracts/contracts';
 import projectRoutes from './projects/projects';
 import leadRoutes from './leads/leads';
+import vendorRoutes from './vendors/vendors';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './swagger/openapi';
@@ -64,6 +65,7 @@ app.use('/api/tickets', authenticate, ticketRoutes);
 app.use('/api/contracts', authenticate, contractRoutes);
 app.use('/api/projects', authenticate, projectRoutes);
 app.use('/api/leads', authenticate, leadRoutes);
+app.use('/api/vendors', authenticate, vendorRoutes);
 app.use('/api/uploads', uploadRoutes);
 
 // Health check endpoint

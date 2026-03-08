@@ -76,6 +76,12 @@ import {
   leadStatusDropdownSchema,
   idParamSchema as leadIdParamSchema,
 } from '../leads/leadValidator';
+import {
+  createVendorSchema,
+  updateVendorSchema,
+  listVendorsSchema,
+  idParamSchema as vendorIdParamSchema,
+} from '../vendors/vendorValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -1170,6 +1176,62 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/vendors': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create vendor',
+        tags: ['Vendors'],
+        requestBody: jsonRequestBody(createVendorSchema),
+        responses: {
+          201: successResponse('Vendor created'),
+          200: successResponse('Vendor created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List vendors',
+        tags: ['Vendors'],
+        parameters: makeParameters(listVendorsSchema, 'query'),
+        responses: {
+          200: successResponse('Vendors fetched'),
+        },
+      })
+    ),
+  },
+  '/api/vendors/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get vendor by id',
+        tags: ['Vendors'],
+        parameters: makeParameters(vendorIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Vendor fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update vendor',
+        tags: ['Vendors'],
+        parameters: makeParameters(vendorIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateVendorSchema),
+        responses: {
+          200: successResponse('Vendor updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete vendor',
+        tags: ['Vendors'],
+        parameters: makeParameters(vendorIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Vendor deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -1225,6 +1287,7 @@ export const openApiSpec = {
     { name: 'Contracts' },
     { name: 'Projects' },
     { name: 'Leads' },
+    { name: 'Vendors' },
     { name: 'Uploads' },
   ],
   components: {

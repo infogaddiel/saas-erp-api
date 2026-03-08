@@ -20,6 +20,7 @@ import ProjectFile from './ProjectFile';
 import Lead from './Lead';
 import LeadStatus from './LeadStatus';
 import LeadStatusChangeHistory from './LeadStatusChangeHistory';
+import Vendor from './Vendor';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -151,6 +152,10 @@ LeadStatus.hasMany(LeadStatusChangeHistory, { foreignKey: 'status_id', as: 'hist
 LeadStatusChangeHistory.belongsTo(User, { foreignKey: 'changed_by', as: 'changedBy' });
 User.hasMany(LeadStatusChangeHistory, { foreignKey: 'changed_by', as: 'leadStatusChanges' });
 
+// Vendor - User (created_by)
+Vendor.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+User.hasMany(Vendor, { foreignKey: 'created_by', as: 'vendors' });
+
 export {
   User,
   Company,
@@ -174,4 +179,5 @@ export {
   Lead,
   LeadStatus,
   LeadStatusChangeHistory,
+  Vendor,
 };
