@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 
 interface CompanyPayload {
   name: string;
+  company_code?: string | null;
   address?: string | null;
   branch1_address?: string | null;
   branch2_address?: string | null;
@@ -41,6 +42,12 @@ interface CompanyPayload {
 
 export const createCompany = async (data: CompanyPayload) => {
   try {
+    const normalizedCompanyCode = data.company_code?.trim().toUpperCase() ?? null;
+
+    if (!normalizedCompanyCode || normalizedCompanyCode.length !== 3) {
+      return { success: false, message: 'Company code is required' };
+    }
+
     const existingCompany = await Company.findOne({
       where: {
         name: { [Op.iLike]: data.name.trim() },
@@ -51,8 +58,19 @@ export const createCompany = async (data: CompanyPayload) => {
       return { success: false, message: 'Company already exists' };
     }
 
+    const existingCompanyCode = await Company.findOne({
+      where: {
+        company_code: { [Op.iLike]: normalizedCompanyCode },
+      },
+    });
+
+    if (existingCompanyCode) {
+      return { success: false, message: 'Company code already exists' };
+    }
+
     const company = await Company.create({
       name: data.name,
+      company_code: normalizedCompanyCode,
       address: data.address ?? null,
       branch1_address: data.branch1_address ?? null,
       branch2_address: data.branch2_address ?? null,
@@ -155,6 +173,24 @@ export const updateCompany = async (id: number, updates: Partial<CompanyPayload>
       if (existingCompany) {
         return { success: false, message: 'Company already exists' };
       }
+    }
+
+    if (updates.company_code && updates.company_code.trim() !== '') {
+      const normalizedCompanyCode = updates.company_code.trim().toUpperCase();
+      if (normalizedCompanyCode.length !== 3) {
+        return { success: false, message: 'Company code must be exactly 3 characters' };
+      }
+      const existingCompanyCode = await Company.findOne({
+        where: {
+          id: { [Op.ne]: id },
+          company_code: { [Op.iLike]: normalizedCompanyCode },
+        },
+      });
+
+      if (existingCompanyCode) {
+        return { success: false, message: 'Company code already exists' };
+      }
+      updates.company_code = normalizedCompanyCode;
     }
 
     const normalizedUpdates = {

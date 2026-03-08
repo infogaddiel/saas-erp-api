@@ -9,9 +9,16 @@ import {
   updateContract,
 } from './contractService';
 
+const getCompanyCode = (req: Request): string | null => {
+  const code = req.user?.company_code;
+  if (typeof code !== 'string') return null;
+  const normalized = code.trim().toUpperCase();
+  return /^[A-Z0-9]{3}$/.test(normalized) ? normalized : null;
+};
+
 export const create = async (req: Request, res: Response) => {
   try {
-    const result = await createContract(req.body);
+    const result = await createContract(req.body, getCompanyCode(req));
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;
       return res.status(statusCode).json(result);

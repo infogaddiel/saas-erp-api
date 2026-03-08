@@ -1,6 +1,6 @@
 import sequelize from '../config/database';
 import { Op, UniqueConstraintError } from 'sequelize';
-import { Company, Customer, Project, ProjectFile, User } from '../models';
+import { Customer, Project, ProjectFile, User } from '../models';
 import ExcelJS from 'exceljs';
 
 interface ProjectDocumentInput {
@@ -26,7 +26,7 @@ interface CreateProjectInput {
 
 interface UpdateProjectInput extends Partial<CreateProjectInput> {}
 
-const DEFAULT_PROJECT_PREFIX = 'PRJ';
+const DEFAULT_PROJECT_PREFIX = 'GED';
 const PROJECT_NUMBER_MIDDLE = 'PROJ';
 const PROJECT_NUMBER_PADDING = 5;
 const MAX_PROJECT_NUMBER_RETRIES = 3;
@@ -45,28 +45,15 @@ const parseDate = (value: string | null | undefined): string | null => {
   return `${y}-${m}-${d}`;
 };
 
-const getCompanyPrefix = (companyName: string | null | undefined): string => {
-  if (!companyName) return DEFAULT_PROJECT_PREFIX;
-  const normalized = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (normalized.length === 0) return DEFAULT_PROJECT_PREFIX;
-  return normalized.slice(0, 3).padEnd(3, 'X');
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_PROJECT_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return DEFAULT_PROJECT_PREFIX;
+  return normalized;
 };
 
-const getCompanyPrefixByUserId = async (userId: number | null | undefined, transaction?: any): Promise<string> => {
-  if (!userId) return DEFAULT_PROJECT_PREFIX;
-
-  const user = await User.findByPk(userId, {
-    attributes: ['id', 'company_id'],
-    include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
-    transaction,
-  });
-
-  const companyName = (user as any)?.company?.name as string | undefined;
-  return getCompanyPrefix(companyName);
-};
-
-const generateNextProjectNumber = async (createdBy: number | null | undefined, transaction?: any): Promise<string> => {
-  const prefix = await getCompanyPrefixByUserId(createdBy, transaction);
+const generateNextProjectNumber = async (companyCode: string | null | undefined, transaction?: any): Promise<string> => {
+  const prefix = getCompanyPrefix(companyCode);
   const numberPrefix = `${prefix}${PROJECT_NUMBER_MIDDLE}`;
 
   const latestProject = await Project.findOne({
@@ -100,7 +87,7 @@ const normalizeOptionalText = (value: string | null | undefined): string | null 
   return normalized === '' ? null : normalized;
 };
 
-export const createProject = async (data: CreateProjectInput) => {
+export const createProject = async (data: CreateProjectInput, companyCode?: string | null) => {
   try {
     const customer = await Customer.findByPk(data.customer_id, { attributes: ['id'] });
     if (!customer) return { success: false, message: 'Customer not found', statusCode: 404 };
@@ -110,7 +97,7 @@ export const createProject = async (data: CreateProjectInput) => {
     for (let attempt = 0; attempt < MAX_PROJECT_NUMBER_RETRIES; attempt += 1) {
       try {
         created = await sequelize.transaction(async (transaction) => {
-          const projectNumber = await generateNextProjectNumber(data.created_by, transaction);
+          const projectNumber = await generateNextProjectNumber(companyCode, transaction);
           const documents = Array.isArray(data.documents) ? data.documents : [];
 
           const project = await Project.create({
@@ -160,7 +147,11 @@ export const createProject = async (data: CreateProjectInput) => {
   }
 };
 
-export const bulkCreateProjects = async (dataArray: CreateProjectInput[], userId: number | null | undefined) => {
+export const bulkCreateProjects = async (
+  dataArray: CreateProjectInput[],
+  userId: number | null | undefined,
+  companyCode: string | null | undefined
+) => {
   try {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       return { success: false, message: 'Invalid data: Expected non-empty array' };
@@ -213,7 +204,7 @@ export const bulkCreateProjects = async (dataArray: CreateProjectInput[], userId
 
       for (let index = 0; index < dataArray.length; index += 1) {
         const input = dataArray[index];
-        const projectNumber = await generateNextProjectNumber(input.created_by ?? userId ?? null, transaction);
+        const projectNumber = await generateNextProjectNumber(companyCode, transaction);
         const documents = Array.isArray(input.documents) ? input.documents : [];
 
         const project = await Project.create(

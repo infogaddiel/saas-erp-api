@@ -109,6 +109,20 @@ const jsonRequestBody = (schema: Joi.ObjectSchema, required = true) => ({
   },
 });
 
+const jsonRequestBodyWithExample = (
+  schema: Joi.ObjectSchema,
+  example: Record<string, unknown>,
+  required = true
+) => ({
+  required,
+  content: {
+    'application/json': {
+      schema: toOpenApiSchema(schema),
+      example,
+    },
+  },
+});
+
 const successResponse = (description: string) => ({
   description,
   content: {
@@ -177,9 +191,32 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
     post: operation({
       summary: 'Login with email/mobile and password',
       tags: ['Auth'],
-      requestBody: jsonRequestBody(loginSchema),
+      requestBody: jsonRequestBodyWithExample(loginSchema, {
+        mobile: '8527607855',
+        password: 'password123',
+      }),
       responses: {
-        200: successResponse('Login success'),
+        200: {
+          description: 'Login success. Copy `token` and use it in Swagger Authorize as `Bearer <token>`.',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Login successful' },
+                  token: { type: 'string' },
+                  user: { type: 'object' },
+                },
+              },
+              example: {
+                success: true,
+                message: 'Login successful',
+                token: '<jwt-token>',
+              },
+            },
+          },
+        },
         401: successResponse('Invalid credentials'),
         500: successResponse('Internal server error'),
       },
@@ -248,7 +285,7 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
   '/api/companies': {
     post: protectedOperation(
       operation({
-        summary: 'Create a company',
+        summary: 'Create a company (includes company_code)',
         tags: ['Companies'],
         requestBody: jsonRequestBody(createCompanySchema),
         responses: {
@@ -293,7 +330,7 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
     ),
     put: protectedOperation(
       operation({
-        summary: 'Update company',
+        summary: 'Update company (includes company_code)',
         tags: ['Companies'],
         parameters: makeParameters(companyIdParamSchema, 'path'),
         requestBody: jsonRequestBody(updateCompanySchema),
@@ -1196,6 +1233,8 @@ export const openApiSpec = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
+        description:
+          'Use token from /api/auth/login. In Swagger click Authorize and paste: Bearer <token>.',
       },
     },
   },

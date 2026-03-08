@@ -32,13 +32,24 @@ const authenticate: RequestHandler = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Invalid token payload' });
     }
 
-    const user = await User.findByPk(payload.id);
+    const user = await User.findByPk(payload.id, {
+      attributes: ['id', 'company_id'],
+    });
     if (!user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
 
     // Attach user to request
-    (req as any).user = user;
+    const normalizedCompanyCode =
+      typeof payload.company_code === 'string' && /^[A-Z0-9]{3}$/.test(payload.company_code.toUpperCase())
+        ? payload.company_code.toUpperCase()
+        : null;
+
+    (req as any).user = {
+      id: user.id,
+      company_id: payload.company_id ?? user.company_id ?? null,
+      company_code: normalizedCompanyCode,
+    };
 
     next();
   } catch (error) {

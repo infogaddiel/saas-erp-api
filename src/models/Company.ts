@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 class Company extends Model {
   public id!: number;
   public name!: string;
+  public company_code!: string;
   public address!: string | null;
   public branch1_address!: string | null;
   public branch2_address!: string | null;
@@ -53,6 +54,11 @@ Company.init(
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,
+    },
+    company_code: {
+      type: DataTypes.STRING(3),
+      allowNull: true,
+      defaultValue: 'GED',
     },
     mobile: {
       type: DataTypes.STRING(15),

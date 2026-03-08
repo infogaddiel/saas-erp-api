@@ -23,6 +23,13 @@ const getUserId = (req: Request): number | null => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const getCompanyCode = (req: Request): string | null => {
+  const code = req.user?.company_code;
+  if (typeof code !== 'string') return null;
+  const normalized = code.trim().toUpperCase();
+  return /^[A-Z0-9]{3}$/.test(normalized) ? normalized : null;
+};
+
 export const create = async (req: Request, res: Response) => {
   try {
     const {
@@ -38,19 +45,22 @@ export const create = async (req: Request, res: Response) => {
       issue_description,
     } = req.body;
 
-    const result = await createTicket({
-      customer_id,
-      status_id,
-      service_address,
-      priority,
-      service_type,
-      assigned_technician_id,
-      scheduled_date,
-      equipment_type,
-      equipment_model,
-      issue_description,
-      created_by: getUserId(req),
-    });
+    const result = await createTicket(
+      {
+        customer_id,
+        status_id,
+        service_address,
+        priority,
+        service_type,
+        assigned_technician_id,
+        scheduled_date,
+        equipment_type,
+        equipment_model,
+        issue_description,
+        created_by: getUserId(req),
+      },
+      getCompanyCode(req)
+    );
 
     if (!result.success) return res.status(500).json(result);
 

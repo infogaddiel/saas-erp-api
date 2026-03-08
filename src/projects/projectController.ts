@@ -17,12 +17,22 @@ const getUserId = (req: Request): number | null => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const getCompanyCode = (req: Request): string | null => {
+  const code = req.user?.company_code;
+  if (typeof code !== 'string') return null;
+  const normalized = code.trim().toUpperCase();
+  return /^[A-Z0-9]{3}$/.test(normalized) ? normalized : null;
+};
+
 export const create = async (req: Request, res: Response) => {
   try {
-    const result = await createProject({
-      ...req.body,
-      created_by: getUserId(req),
-    });
+    const result = await createProject(
+      {
+        ...req.body,
+        created_by: getUserId(req),
+      },
+      getCompanyCode(req)
+    );
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;
       return res.status(statusCode).json(result);
@@ -43,7 +53,7 @@ export const bulkCreate = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Expected "projects" array in body' });
     }
 
-    const result = await bulkCreateProjects(projects, userId);
+    const result = await bulkCreateProjects(projects, userId, getCompanyCode(req));
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 400;
       return res.status(statusCode).json(result);

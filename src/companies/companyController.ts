@@ -12,7 +12,7 @@ export const create = async (req: Request, res: Response) => {
   try {
     const result = await createCompany(req.body);
     if (!result.success) {
-      if (result.message === 'Company already exists') {
+      if (result.message === 'Company already exists' || result.message === 'Company code already exists') {
         return res.status(409).json(result);
       }
       return res.status(400).json(result);
@@ -60,7 +60,7 @@ export const update = async (req: Request, res: Response) => {
 
     const result = await updateCompany(id, updates);
     if (!result.success) {
-      if (result.message === 'Company already exists') {
+      if (result.message === 'Company already exists' || result.message === 'Company code already exists') {
         return res.status(409).json(result);
       }
       return res.status(400).json(result);

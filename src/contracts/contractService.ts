@@ -1,8 +1,7 @@
 import sequelize from '../config/database';
-import { Op, Transaction, UniqueConstraintError } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import ExcelJS from 'exceljs';
 import {
-  Company,
   Contract,
   ContractItem,
   ContractInvoice,
@@ -57,15 +56,14 @@ interface UpdateContractInput extends Partial<CreateContractInput> {
   contract_number?: string;
 }
 
-const DEFAULT_CONTRACT_PREFIX = 'CON';
-const CONTRACT_NUMBER_PADDING = 3;
-const MAX_CONTRACT_NUMBER_RETRIES = 3;
+const DEFAULT_CONTRACT_PREFIX = 'GED';
+const CONTRACT_NUMBER_MIDDLE = 'CONT';
 
 const contractInclude = [
   { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
   { model: Project, as: 'project', attributes: ['id', 'project_number', 'project_name', 'status', 'customer_id'] },
   {
-    model: ContractItem,
+    model: ContractItem.unscoped(),
     as: 'lineItems',
     include: [
       { model: Item, as: 'item', attributes: ['id', 'item_name', 'item_code'] },
@@ -76,74 +74,44 @@ const contractInclude = [
       },
     ],
   },
-  { model: ContractInvoice, as: 'invoices' },
+  { model: ContractInvoice.unscoped(), as: 'invoices' },
 ];
 
 const calculateTotalValue = (lineItems: CreateContractItemInput[]): number => {
   return lineItems.reduce((sum, item) => sum + (item.quantity ?? 1) * item.unit_price, 0);
 };
 
-const getCompanyPrefix = (companyName: string | null | undefined): string => {
-  if (!companyName) return DEFAULT_CONTRACT_PREFIX;
-  const normalized = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (normalized.length === 0) return DEFAULT_CONTRACT_PREFIX;
-  return normalized.slice(0, 3).padEnd(3, 'X');
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_CONTRACT_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return DEFAULT_CONTRACT_PREFIX;
+  return normalized;
 };
 
-const getCompanyPrefixByCustomerId = async (
-  customerId: number,
-  transaction: Transaction
+const generateNextContractNumber = async (
+  companyCode: string | null | undefined,
+  customerId: number
 ): Promise<string> => {
-  const customer = await Customer.findByPk(customerId, {
-    attributes: ['id'],
-    include: [
-      {
-        model: User,
-        as: 'createdBy',
-        attributes: ['id', 'company_id'],
-        required: false,
-        include: [{ model: Company, as: 'company', attributes: ['id', 'name'], required: false }],
-      },
-    ],
-    transaction,
-  });
+  const prefix = getCompanyPrefix(companyCode);
+  const customerToken = String(customerId);
+  const numberPrefix = `${prefix}${CONTRACT_NUMBER_MIDDLE}${customerToken}`;
 
-  const companyName = (customer as any)?.createdBy?.company?.name as string | undefined;
-  return getCompanyPrefix(companyName);
-};
-
-const generateNextContractNumber = async (customerId: number, transaction: Transaction): Promise<string> => {
-  const prefix = await getCompanyPrefixByCustomerId(customerId, transaction);
-
-  const latestContract = await Contract.findOne({
+  const contractCount = await Contract.unscoped().count({
     where: {
+      customer_id: customerId,
       contract_number: {
-        [Op.iLike]: `${prefix}%`,
+        [Op.iLike]: `${numberPrefix}%`,
       },
     },
-    attributes: ['contract_number'],
-    order: [['id', 'DESC']],
-    transaction,
-    lock: transaction.LOCK.UPDATE,
   });
 
-  let nextSequence = 1;
-  const currentNumber = latestContract?.contract_number;
-  if (currentNumber) {
-    const match = String(currentNumber).match(new RegExp(`^${prefix}(\\d+)$`, 'i'));
-    if (match) {
-      const parsed = parseInt(match[1], 10);
-      if (!Number.isNaN(parsed)) nextSequence = parsed + 1;
-    }
-  }
-
-  return `${prefix}CONT${String(nextSequence).padStart(CONTRACT_NUMBER_PADDING, '0')}`;
+  return `${numberPrefix}${contractCount + 1}`;
 };
 
 const createLineItemsAndSchedules = async (
   contractId: number,
   lineItems: CreateContractItemInput[],
-  transaction: Transaction
+  transaction?: Transaction
 ) => {
   for (const lineItem of lineItems) {
     const createdLineItem = await ContractItem.create(
@@ -163,7 +131,7 @@ const createLineItemsAndSchedules = async (
     if (serviceSchedules.length > 0) {
       await ServiceSchedule.bulkCreate(
         serviceSchedules.map((schedule) => ({
-          id: createdLineItem.id,
+          contract_item_id: createdLineItem.id,
           planned_date: schedule.planned_date,
           actual_date: schedule.actual_date ?? null,
           service_status: schedule.service_status ?? 'Scheduled',
@@ -179,12 +147,12 @@ const createLineItemsAndSchedules = async (
 const createInvoices = async (
   contractId: number,
   invoices: CreateContractInvoiceInput[],
-  transaction: Transaction
+  transaction?: Transaction
 ) => {
   if (invoices.length === 0) return;
   await ContractInvoice.bulkCreate(
     invoices.map((invoice) => ({
-      id: contractId,
+      contract_id: contractId,
       scheduled_billing_date: invoice.scheduled_billing_date,
       amount_to_bill: invoice.amount_to_bill,
       invoice_reference: invoice.invoice_reference ?? null,
@@ -194,7 +162,39 @@ const createInvoices = async (
   );
 };
 
-export const createContract = async (data: CreateContractInput) => {
+const getContractByIdWithFallback = async (id: number) => {
+  try {
+    return await Contract.unscoped().findByPk(id, { include: contractInclude });
+  } catch (includeError) {
+    console.error('Contract include fetch failed, returning base contract:', includeError);
+    return Contract.unscoped().findByPk(id);
+  }
+};
+
+const getContractsWithFallback = async (where: any, offset: number, limit: number) => {
+  const count = await Contract.unscoped().count({ where });
+  try {
+    const rows = await Contract.unscoped().findAll({
+      where,
+      offset,
+      limit,
+      order: [['id', 'DESC']],
+      include: contractInclude,
+    });
+    return { count, rows };
+  } catch (includeError) {
+    console.error('Contract list include fetch failed, returning base contracts:', includeError);
+    const rows = await Contract.unscoped().findAll({
+      where,
+      offset,
+      limit,
+      order: [['id', 'DESC']],
+    });
+    return { count, rows };
+  }
+};
+
+export const createContract = async (data: CreateContractInput, companyCode?: string | null) => {
   try {
     const customer = await Customer.findByPk(data.customer_id, { attributes: ['id'] });
     if (!customer) return { success: false, message: 'Customer not found', statusCode: 404 };
@@ -211,45 +211,25 @@ export const createContract = async (data: CreateContractInput) => {
     const derivedTotal = calculateTotalValue(lineItems);
     const totalValue = data.total_value ?? derivedTotal;
 
-    let created: Contract | null = null;
-    for (let attempt = 0; attempt < MAX_CONTRACT_NUMBER_RETRIES; attempt += 1) {
-      try {
-        created = await sequelize.transaction(async (transaction) => {
-          const contractNumber = await generateNextContractNumber(data.customer_id, transaction);
+    const contractNumber = await generateNextContractNumber(companyCode, data.customer_id);
+    const created = await Contract.create({
+      name: contractName,
+      description: contractDescription,
+      customer_id: data.customer_id,
+      project_id: data.project_id,
+      contract_number: contractNumber,
+      contract_type: data.contract_type,
+      status: data.status ?? 'Draft',
+      start_date: data.start_date,
+      end_date: data.end_date,
+      total_value: totalValue,
+      currency: (data.currency ?? 'INR').toUpperCase(),
+    });
 
-          const contract = await Contract.create(
-            {
-              name: contractName,
-              description: contractDescription,
-              customer_id: data.customer_id,
-              project_id: data.project_id,
-              contract_number: contractNumber,
-              contract_type: data.contract_type,
-              status: data.status ?? 'Draft',
-              start_date: data.start_date,
-              end_date: data.end_date,
-              total_value: totalValue,
-              currency: (data.currency ?? 'INR').toUpperCase(),
-            },
-            { transaction }
-          );
+    await createLineItemsAndSchedules(created.id, lineItems);
+    await createInvoices(created.id, invoices);
 
-          await createLineItemsAndSchedules(contract.id, lineItems, transaction);
-          await createInvoices(contract.id, invoices, transaction);
-
-          return contract;
-        });
-
-        break;
-      } catch (error) {
-        const isUniqueViolation = error instanceof UniqueConstraintError;
-        if (!isUniqueViolation || attempt === MAX_CONTRACT_NUMBER_RETRIES - 1) throw error;
-      }
-    }
-
-    if (!created) return { success: false, message: 'Error creating contract' };
-
-    const withAssociations = await Contract.findByPk(created.id, { include: contractInclude });
+    const withAssociations = await getContractByIdWithFallback(created.id);
     return { success: true, data: withAssociations };
   } catch (error) {
     console.error('createContract error:', error);
@@ -280,27 +260,7 @@ export const getContracts = async (
       where.contract_number = { [Op.iLike]: `%${filters.contract_number.trim()}%` };
     }
 
-    const count = await Contract.count({ where });
-
-    const pagedContracts = await Contract.findAll({
-      where,
-      attributes: ['id'],
-      offset,
-      limit,
-      order: [['id', 'DESC']],
-      raw: true,
-    });
-
-    const contractIds = pagedContracts.map((contract: any) => contract.id);
-
-    const rows =
-      contractIds.length > 0
-        ? await Contract.findAll({
-            where: { id: contractIds },
-            order: [['id', 'DESC']],
-            include: contractInclude,
-          })
-        : [];
+    const { count, rows } = await getContractsWithFallback(where, offset, limit);
 
     const totalPages = Math.ceil(count / limit);
     return {
@@ -325,7 +285,7 @@ export const getContracts = async (
 
 export const getContractById = async (id: number) => {
   try {
-    const contract = await Contract.findByPk(id, { include: contractInclude });
+    const contract = await getContractByIdWithFallback(id);
     if (!contract) return { success: false, message: 'Contract not found' };
     return { success: true, data: contract };
   } catch (error) {
@@ -339,7 +299,7 @@ export const getContractsForDropdown = async (customer_id?: number) => {
     const where: any = {};
     if (customer_id != null) where.customer_id = customer_id;
 
-    const contracts = await Contract.findAll({
+    const contracts = await Contract.unscoped().findAll({
       attributes: ['id', 'name', 'contract_number', 'status'],
       where,
       order: [
@@ -357,7 +317,7 @@ export const getContractsForDropdown = async (customer_id?: number) => {
 
 export const updateContract = async (id: number, updates: UpdateContractInput) => {
   try {
-    const contract = await Contract.findByPk(id);
+    const contract = await Contract.unscoped().findByPk(id);
     if (!contract) return { success: false, message: 'Contract not found' };
 
     if (updates.customer_id != null) {
@@ -381,7 +341,7 @@ export const updateContract = async (id: number, updates: UpdateContractInput) =
 
     if (updates.contract_number) {
       const normalizedContractNumber = updates.contract_number.trim();
-      const existingContract = await Contract.findOne({
+      const existingContract = await Contract.unscoped().findOne({
         where: {
           contract_number: { [Op.iLike]: normalizedContractNumber },
           id: { [Op.ne]: id },
@@ -435,7 +395,7 @@ export const updateContract = async (id: number, updates: UpdateContractInput) =
       }
     });
 
-    const withAssociations = await Contract.findByPk(id, { include: contractInclude });
+    const withAssociations = await getContractByIdWithFallback(id);
     return { success: true, data: withAssociations };
   } catch (error) {
     console.error('updateContract error:', error);
@@ -469,7 +429,7 @@ export const deleteContract = async (id: number) => {
 
 export const exportContractsToExcel = async () => {
   try {
-    const contracts = await Contract.findAll({
+    const contracts = await Contract.unscoped().findAll({
       include: [
         { model: Customer, as: 'customer', attributes: ['id', 'name', 'mobile', 'email'] },
         { model: Project, as: 'project', attributes: ['id', 'project_number', 'project_name'] },

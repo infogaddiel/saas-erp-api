@@ -6,6 +6,7 @@ const optionalAmount = Joi.number().precision(2).optional().allow(null);
 
 export const createCompanySchema = Joi.object({
   name: Joi.string().max(255).required(),
+  company_code: Joi.string().trim().uppercase().alphanum().length(3).required(),
   address: Joi.string().optional().allow(null, ''),
   branch1_address: Joi.string().optional().allow(null, ''),
   branch2_address: Joi.string().optional().allow(null, ''),
@@ -44,6 +45,7 @@ export const createCompanySchema = Joi.object({
 
 export const updateCompanySchema = Joi.object({
   name: Joi.string().max(255).optional(),
+  company_code: Joi.string().trim().uppercase().alphanum().length(3).optional(),
   address: Joi.string().optional().allow(null, ''),
   branch1_address: Joi.string().optional().allow(null, ''),
   branch2_address: Joi.string().optional().allow(null, ''),

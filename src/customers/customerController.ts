@@ -20,7 +20,7 @@ import { Op } from 'sequelize';
 declare global {
   namespace Express {
     interface Request {
-      user?: { id: string | number; company_id?: number | null };
+      user?: { id: string | number; company_id?: number | null; company_code?: string | null };
     }
   }
 }

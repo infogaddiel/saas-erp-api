@@ -4,7 +4,6 @@ import {
   Ticket,
   User,
   Customer,
-  Company,
   TicketStatus,
   TicketStatusHistory,
   TicketService as TicketServiceModel,
@@ -63,7 +62,7 @@ interface CreateTicketServiceInput {
 interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> {}
 
 const OPEN_STATUS_NAME = 'Open';
-const DEFAULT_TICKET_PREFIX = 'TKT';
+const DEFAULT_TICKET_PREFIX = 'GED';
 const TICKET_NUMBER_PADDING = 5;
 
 async function getOpenStatusId(transaction?: any): Promise<number | null> {
@@ -79,28 +78,15 @@ function parseDate(value: string | null | undefined): string | null {
   return parseScheduledDate(value);
 }
 
-function getCompanyPrefix(companyName: string | null | undefined): string {
-  if (!companyName) return DEFAULT_TICKET_PREFIX;
-  const normalized = companyName.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (normalized.length === 0) return DEFAULT_TICKET_PREFIX;
-  return normalized.slice(0, 3).padEnd(3, 'X');
+function getCompanyPrefix(companyCode: string | null | undefined): string {
+  if (!companyCode) return DEFAULT_TICKET_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return DEFAULT_TICKET_PREFIX;
+  return normalized;
 }
 
-async function getCompanyPrefixByUserId(userId: number | null | undefined, transaction?: any): Promise<string> {
-  if (!userId) return DEFAULT_TICKET_PREFIX;
-
-  const user = await User.findByPk(userId, {
-    attributes: ['id', 'company_id'],
-    include: [{ model: Company, as: 'company', attributes: ['id', 'name'] }],
-    transaction,
-  });
-
-  const companyName = (user as any)?.company?.name as string | undefined;
-  return getCompanyPrefix(companyName);
-}
-
-async function generateNextTicketNumber(createdBy: number | null | undefined, transaction?: any): Promise<string> {
-  const prefix = await getCompanyPrefixByUserId(createdBy, transaction);
+async function generateNextTicketNumber(companyCode: string | null | undefined, transaction?: any): Promise<string> {
+  const prefix = getCompanyPrefix(companyCode);
 
   const latestTicket = await Ticket.findOne({
     where: {
@@ -143,7 +129,7 @@ async function createTicketStatusHistory(
   );
 }
 
-export const createTicket = async (data: CreateTicketInput) => {
+export const createTicket = async (data: CreateTicketInput, companyCode?: string | null) => {
   try {
     let ticket: Ticket | null = null;
 
@@ -153,7 +139,7 @@ export const createTicket = async (data: CreateTicketInput) => {
           const statusId = data.status_id ?? (await getOpenStatusId(transaction));
           if (!statusId) throw new Error('Open ticket status not found');
 
-          const ticketNumber = await generateNextTicketNumber(data.created_by, transaction);
+          const ticketNumber = await generateNextTicketNumber(companyCode, transaction);
 
           const createdTicket = await Ticket.create(
             {

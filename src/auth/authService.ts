@@ -80,7 +80,7 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
       where: whereCondition,
       include: [
         { model: Role, as: 'role', attributes: ['id', 'type'] },
-        { model: Company, as: 'company', attributes: ['id', 'is_otp_auth_required'] },
+        { model: Company, as: 'company', attributes: ['id', 'company_code', 'is_otp_auth_required'] },
       ],
       attributes: ['id', 'name', 'email', 'profile_image', 'mobile', 'password', 'company_id', 'role_id'],
     });
@@ -111,7 +111,15 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
       return { success: false, message: 'Server configuration error' };
     }
 
-    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1d' });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        company_id: user.company_id ?? null,
+        company_code: company?.company_code ?? null,
+      },
+      secret,
+      { expiresIn: '1d' }
+    );
 
     // Get permissions based on role
     let permissions: any[] = [];
@@ -158,6 +166,7 @@ export const loginUser = async ({ email, mobile, password }: LoginInput) => {
         mobile: user.mobile,
         profile_image: user.profile_image,
         company_id: user.company_id,
+        company_code: company?.company_code ?? null,
         is_otp_auth_required: isOtpAuthRequired,
         role: userRole,
         permissions,
