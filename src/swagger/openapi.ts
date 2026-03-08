@@ -82,6 +82,12 @@ import {
   listVendorsSchema,
   idParamSchema as vendorIdParamSchema,
 } from '../vendors/vendorValidator';
+import {
+  createPurchaseOrderSchema,
+  updatePurchaseOrderSchema,
+  listPurchaseOrdersSchema,
+  idParamSchema as purchaseOrderIdParamSchema,
+} from '../purchaseOrders/purchaseOrderValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -1232,6 +1238,62 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/purchase-orders': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create purchase order',
+        tags: ['Purchase Orders'],
+        requestBody: jsonRequestBody(createPurchaseOrderSchema),
+        responses: {
+          201: successResponse('Purchase order created'),
+          200: successResponse('Purchase order created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List purchase orders',
+        tags: ['Purchase Orders'],
+        parameters: makeParameters(listPurchaseOrdersSchema, 'query'),
+        responses: {
+          200: successResponse('Purchase orders fetched'),
+        },
+      })
+    ),
+  },
+  '/api/purchase-orders/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get purchase order by id',
+        tags: ['Purchase Orders'],
+        parameters: makeParameters(purchaseOrderIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Purchase order fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update purchase order',
+        tags: ['Purchase Orders'],
+        parameters: makeParameters(purchaseOrderIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updatePurchaseOrderSchema),
+        responses: {
+          200: successResponse('Purchase order updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete purchase order',
+        tags: ['Purchase Orders'],
+        parameters: makeParameters(purchaseOrderIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Purchase order deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -1288,6 +1350,7 @@ export const openApiSpec = {
     { name: 'Projects' },
     { name: 'Leads' },
     { name: 'Vendors' },
+    { name: 'Purchase Orders' },
     { name: 'Uploads' },
   ],
   components: {
