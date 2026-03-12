@@ -16,8 +16,8 @@ interface CreatePurchaseOrderInput {
   created_by?: number | null;
 }
 
-interface UpdatePurchaseOrderInput extends Partial<CreatePurchaseOrderInput> {}
-
+interface UpdatePurchaseOrderInput extends Partial<CreatePurchaseOrderInput> { }
+const DEFAULT_PO_PREFIX = 'SEM';
 const PO_NUMBER_PREFIX = 'PO';
 const PO_NUMBER_PADDING = 5;
 const MAX_PO_NUMBER_RETRIES = 3;
@@ -36,11 +36,19 @@ const normalizeOptionalText = (value: string | null | undefined): string | null 
   return normalized === '' ? null : normalized;
 };
 
-const generateNextPoNumber = async (transaction?: any): Promise<string> => {
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_PO_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return DEFAULT_PO_PREFIX;
+  return normalized;
+};
+const generateNextPoNumber = async (transaction?: any, companyCode?: string | null | undefined): Promise<string> => {
+  const prefix = getCompanyPrefix(companyCode);
+  const numberPrefix = `${prefix}${PO_NUMBER_PREFIX}`;
   const latest = await PurchaseOrder.findOne({
     where: {
       po_number: {
-        [Op.like]: `${PO_NUMBER_PREFIX}%`,
+        [Op.like]: `${numberPrefix}%`,
       },
     },
     attributes: ['po_number'],
@@ -52,14 +60,14 @@ const generateNextPoNumber = async (transaction?: any): Promise<string> => {
   let nextSequence = 1;
   const currentNumber = latest?.po_number;
   if (currentNumber) {
-    const match = currentNumber.match(new RegExp(`^${PO_NUMBER_PREFIX}(\\d+)$`));
+    const match = currentNumber.match(new RegExp(`^${numberPrefix}(\\d+)$`));
     if (match) {
       const parsed = parseInt(match[1], 10);
       if (!Number.isNaN(parsed)) nextSequence = parsed + 1;
     }
   }
 
-  return `${PO_NUMBER_PREFIX}${String(nextSequence).padStart(PO_NUMBER_PADDING, '0')}`;
+  return `${numberPrefix}${String(nextSequence).padStart(PO_NUMBER_PADDING, '0')}`;
 };
 
 const purchaseOrderInclude = [
@@ -67,7 +75,7 @@ const purchaseOrderInclude = [
   { model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] },
 ];
 
-export const createPurchaseOrder = async (data: CreatePurchaseOrderInput) => {
+export const createPurchaseOrder = async (data: CreatePurchaseOrderInput, companyCode?: string | null) => {
   try {
     const vendor = await Vendor.findByPk(data.vendor_id, { attributes: ['id'] });
     if (!vendor) return { success: false, message: 'Vendor not found', statusCode: 404 };

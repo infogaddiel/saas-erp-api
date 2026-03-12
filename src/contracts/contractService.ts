@@ -56,7 +56,7 @@ interface UpdateContractInput extends Partial<CreateContractInput> {
   contract_number?: string;
 }
 
-const DEFAULT_CONTRACT_PREFIX = 'GED';
+const DEFAULT_CONTRACT_PREFIX = 'SEM';
 const CONTRACT_NUMBER_MIDDLE = 'CONT';
 
 const contractInclude = [

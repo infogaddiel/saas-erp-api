@@ -8,6 +8,7 @@ import {
   updatePurchaseOrder,
 } from './purchaseOrderService';
 import type { PurchaseOrderStatus } from '../models/PurchaseOrder';
+import { getCompanyCode } from '../utils/common';
 
 const getUserId = (req: Request): number | null => {
   const rawUserId = req.user?.id;
@@ -21,7 +22,7 @@ export const create = async (req: Request, res: Response) => {
     const result = await createPurchaseOrder({
       ...req.body,
       created_by: getUserId(req),
-    });
+    }, getCompanyCode(req));
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;
       return res.status(statusCode).json(result);
