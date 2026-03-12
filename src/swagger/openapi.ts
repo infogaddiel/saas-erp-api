@@ -78,6 +78,8 @@ import {
 } from '../leads/leadValidator';
 import {
   createVendorSchema,
+  bulkCreateVendorsSchema,
+  dropdownVendorsSchema,
   updateVendorSchema,
   listVendorsSchema,
   idParamSchema as vendorIdParamSchema,
@@ -1205,6 +1207,49 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/vendors/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export vendors to Excel',
+        tags: ['Vendors'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/vendors/bulk/create': {
+    post: protectedOperation(
+      operation({
+        summary: 'Bulk create vendors',
+        tags: ['Vendors'],
+        requestBody: jsonRequestBody(bulkCreateVendorsSchema),
+        responses: {
+          200: successResponse('Vendors created'),
+          201: successResponse('Vendors created'),
+        },
+      })
+    ),
+  },
+  '/api/vendors/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get vendor dropdown options',
+        tags: ['Vendors'],
+        parameters: makeParameters(dropdownVendorsSchema, 'query'),
+        responses: {
+          200: successResponse('Vendors dropdown fetched'),
+        },
+      })
+    ),
+  },
   '/api/vendors/{id}': {
     get: protectedOperation(
       operation({
@@ -1257,6 +1302,24 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(listPurchaseOrdersSchema, 'query'),
         responses: {
           200: successResponse('Purchase orders fetched'),
+        },
+      })
+    ),
+  },
+  '/api/purchase-orders/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export purchase orders to Excel',
+        tags: ['Purchase Orders'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
         },
       })
     ),

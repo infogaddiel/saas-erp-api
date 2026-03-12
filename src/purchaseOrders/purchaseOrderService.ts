@@ -2,6 +2,7 @@ import { Op, UniqueConstraintError } from 'sequelize';
 import sequelize from '../config/database';
 import { PurchaseOrder, User, Vendor } from '../models';
 import type { PurchaseOrderStatus } from '../models/PurchaseOrder';
+import ExcelJS from 'exceljs';
 
 interface CreatePurchaseOrderInput {
   po_number?: string | null;
@@ -237,5 +238,58 @@ export const deletePurchaseOrder = async (id: number) => {
   } catch (error) {
     console.error('deletePurchaseOrder error:', error);
     return { success: false, message: 'Error deleting purchase order' };
+  }
+};
+
+export const exportPurchaseOrdersToExcel = async () => {
+  try {
+    const purchaseOrders = await PurchaseOrder.findAll({
+      include: purchaseOrderInclude,
+      order: [['id', 'ASC']],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Purchase Orders');
+
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'PO Number', key: 'po_number', width: 18 },
+      { header: 'Vendor', key: 'vendor_name', width: 28 },
+      { header: 'Vendor Company', key: 'vendor_company', width: 24 },
+      { header: 'Order Date', key: 'order_date', width: 14 },
+      { header: 'Expected Delivery', key: 'expected_delivery', width: 18 },
+      { header: 'Total Amount', key: 'total_amount', width: 14 },
+      { header: 'Status', key: 'status', width: 12 },
+      { header: 'Items Description', key: 'items_description', width: 40 },
+      { header: 'Notes', key: 'notes', width: 40 },
+      { header: 'Created By', key: 'created_by_name', width: 20 },
+      { header: 'Created At', key: 'created_at', width: 18 },
+      { header: 'Updated At', key: 'updated_at', width: 18 },
+    ];
+
+    purchaseOrders.forEach((po: any) => {
+      worksheet.addRow({
+        id: po.id,
+        po_number: po.po_number,
+        vendor_name: po.vendor?.vendor_name ?? 'N/A',
+        vendor_company: po.vendor?.company ?? '',
+        order_date: po.order_date,
+        expected_delivery: po.expected_delivery ?? '',
+        total_amount: po.total_amount,
+        status: po.status,
+        items_description: po.items_description ?? '',
+        notes: po.notes ?? '',
+        created_by_name: po.createdBy?.name ?? 'N/A',
+        created_at: po.created_at,
+        updated_at: po.updated_at,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+
+    return { success: true, data: workbook };
+  } catch (error) {
+    console.error('exportPurchaseOrdersToExcel error:', error);
+    return { success: false, message: 'Error exporting purchase orders', data: null };
   }
 };

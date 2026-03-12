@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   createPurchaseOrder,
   deletePurchaseOrder,
+  exportPurchaseOrdersToExcel,
   getPurchaseOrderById,
   getPurchaseOrders,
   updatePurchaseOrder,
@@ -88,6 +89,23 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete purchase order controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (_req: Request, res: Response) => {
+  try {
+    const result = await exportPurchaseOrdersToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `purchase-orders-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export purchase orders controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

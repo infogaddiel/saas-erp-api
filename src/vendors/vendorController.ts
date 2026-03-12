@@ -1,5 +1,14 @@
 import { Request, Response } from 'express';
-import { createVendor, deleteVendor, getVendorById, getVendors, updateVendor } from './vendorService';
+import {
+  bulkCreateVendors,
+  createVendor,
+  deleteVendor,
+  exportVendorsToExcel,
+  getVendorById,
+  getVendors,
+  getVendorsForDropdown,
+  updateVendor,
+} from './vendorService';
 
 const getUserId = (req: Request): number | null => {
   const rawUserId = req.user?.id;
@@ -84,6 +93,60 @@ export const remove = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Delete vendor controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const searchText = (req.query.searchText as string) || undefined;
+    const status = typeof req.query.status === 'boolean' ? req.query.status : undefined;
+
+    const result = await getVendorsForDropdown({ searchText, status });
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown vendors controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const bulkCreate = async (req: Request, res: Response) => {
+  try {
+    const { vendors } = req.body;
+    const userId = getUserId(req);
+
+    if (!Array.isArray(vendors)) {
+      return res.status(400).json({ success: false, message: 'Expected "vendors" array in body' });
+    }
+
+    const result = await bulkCreateVendors(vendors, userId);
+    if (!result.success) {
+      const statusCode = (result as any).statusCode ?? 400;
+      return res.status(statusCode).json(result);
+    }
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Bulk create vendors controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const exportExcel = async (_req: Request, res: Response) => {
+  try {
+    const result = await exportVendorsToExcel();
+    if (!result.success || !result.data) return res.status(500).json(result);
+
+    const filename = `vendors-${new Date().toISOString().split('T')[0]}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await result.data.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export vendors controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

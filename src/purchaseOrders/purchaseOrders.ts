@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { create, getById, list, remove, update } from './purchaseOrderController';
+import { create, exportExcel, getById, list, remove, update } from './purchaseOrderController';
 import validateRequest from '../middlewares/validateRequest';
 import {
   createPurchaseOrderSchema,
@@ -12,6 +12,7 @@ const router = Router();
 
 router.post('/', validateRequest(createPurchaseOrderSchema, 'body'), create);
 router.get('/', validateRequest(listPurchaseOrdersSchema, 'query'), list);
+router.get('/export/excel', exportExcel);
 router.get('/:id', validateRequest(idParamSchema, 'params'), getById);
 router.put(
   '/:id',
