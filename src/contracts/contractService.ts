@@ -91,20 +91,12 @@ const getCompanyPrefix = (companyCode: string | null | undefined): string => {
 };
 
 const generateNextContractNumber = async (
-  companyCode: string | null | undefined,
-  customerId: number
-): Promise<string> => {
+  companyCode: string | null | undefined): Promise<string> => {
   const prefix = getCompanyPrefix(companyCode);
-  const customerToken = String(customerId);
-  const numberPrefix = `${prefix}${CONTRACT_NUMBER_MIDDLE}${customerToken}`;
+  const numberPrefix = `${prefix}${CONTRACT_NUMBER_MIDDLE}00`;
 
   const contractCount = await Contract.unscoped().count({
-    where: {
-      customer_id: customerId,
-      contract_number: {
-        [Op.iLike]: `${numberPrefix}%`,
-      },
-    },
+    where: {},
   });
 
   return `${numberPrefix}${contractCount + 1}`;
@@ -213,7 +205,7 @@ export const createContract = async (data: CreateContractInput, companyCode?: st
     const derivedTotal = calculateTotalValue(lineItems);
     const totalValue = data.total_value ?? derivedTotal;
 
-    const contractNumber = await generateNextContractNumber(companyCode, data.customer_id);
+    const contractNumber = await generateNextContractNumber(companyCode);
     const created = await Contract.create({
       name: contractName,
       description: contractDescription,
