@@ -15,6 +15,7 @@ import projectRoutes from './projects/projects';
 import leadRoutes from './leads/leads';
 import vendorRoutes from './vendors/vendors';
 import purchaseOrderRoutes from './purchaseOrders/purchaseOrders';
+import invoiceRoutes from './invoices/invoices';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './swagger/openapi';
@@ -68,6 +69,7 @@ app.use('/api/projects', authenticate, projectRoutes);
 app.use('/api/leads', authenticate, leadRoutes);
 app.use('/api/vendors', authenticate, vendorRoutes);
 app.use('/api/purchase-orders', authenticate, purchaseOrderRoutes);
+app.use('/api/invoices', authenticate, invoiceRoutes);
 app.use('/api/uploads', uploadRoutes);
 
 // Health check endpoint

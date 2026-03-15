@@ -22,6 +22,8 @@ import LeadStatus from './LeadStatus';
 import LeadStatusChangeHistory from './LeadStatusChangeHistory';
 import Vendor from './Vendor';
 import PurchaseOrder from './PurchaseOrder';
+import Invoice from './Invoice';
+import InvoiceLineItem from './InvoiceLineItem';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -165,6 +167,18 @@ Vendor.hasMany(PurchaseOrder, { foreignKey: 'vendor_id', as: 'purchaseOrders' })
 PurchaseOrder.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 User.hasMany(PurchaseOrder, { foreignKey: 'created_by', as: 'purchaseOrders' });
 
+// Invoice - User (created_by)
+Invoice.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+User.hasMany(Invoice, { foreignKey: 'created_by', as: 'invoices' });
+
+// InvoiceLineItem - Invoice
+InvoiceLineItem.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+Invoice.hasMany(InvoiceLineItem, { foreignKey: 'invoice_id', as: 'lineItems' });
+
+// InvoiceLineItem - Item
+InvoiceLineItem.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+Item.hasMany(InvoiceLineItem, { foreignKey: 'item_id', as: 'invoiceLineItems' });
+
 export {
   User,
   Company,
@@ -190,4 +204,6 @@ export {
   LeadStatusChangeHistory,
   Vendor,
   PurchaseOrder,
+  Invoice,
+  InvoiceLineItem,
 };

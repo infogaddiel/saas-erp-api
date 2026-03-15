@@ -90,6 +90,12 @@ import {
   listPurchaseOrdersSchema,
   idParamSchema as purchaseOrderIdParamSchema,
 } from '../purchaseOrders/purchaseOrderValidator';
+import {
+  createInvoiceSchema,
+  updateInvoiceSchema,
+  listInvoicesSchema,
+  idParamSchema as invoiceIdParamSchema,
+} from '../invoices/invoiceValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -1357,6 +1363,80 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/invoices': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create invoice',
+        tags: ['Invoices'],
+        requestBody: jsonRequestBody(createInvoiceSchema),
+        responses: {
+          201: successResponse('Invoice created'),
+          200: successResponse('Invoice created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List invoices',
+        tags: ['Invoices'],
+        parameters: makeParameters(listInvoicesSchema, 'query'),
+        responses: {
+          200: successResponse('Invoices fetched'),
+        },
+      })
+    ),
+  },
+  '/api/invoices/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export invoices to Excel',
+        tags: ['Invoices'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/invoices/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get invoice by id',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Invoice fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update invoice',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateInvoiceSchema),
+        responses: {
+          200: successResponse('Invoice updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete invoice',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Invoice deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -1414,6 +1494,7 @@ export const openApiSpec = {
     { name: 'Leads' },
     { name: 'Vendors' },
     { name: 'Purchase Orders' },
+    { name: 'Invoices' },
     { name: 'Uploads' },
   ],
   components: {
