@@ -102,6 +102,12 @@ import {
   listReceiptsSchema,
   idParamSchema as receiptIdParamSchema,
 } from '../receipts/receiptValidator';
+import {
+  createPaymentSchema,
+  updatePaymentSchema,
+  listPaymentsSchema,
+  idParamSchema as paymentIdParamSchema,
+} from '../payments/paymentValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -1369,6 +1375,62 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/payments': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create payment',
+        tags: ['Payments'],
+        requestBody: jsonRequestBody(createPaymentSchema),
+        responses: {
+          201: successResponse('Payment created'),
+          200: successResponse('Payment created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List payments',
+        tags: ['Payments'],
+        parameters: makeParameters(listPaymentsSchema, 'query'),
+        responses: {
+          200: successResponse('Payments fetched'),
+        },
+      })
+    ),
+  },
+  '/api/payments/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get payment by id',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Payment fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update payment',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updatePaymentSchema),
+        responses: {
+          200: successResponse('Payment updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete payment',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Payment deleted'),
+        },
+      })
+    ),
+  },
   '/api/receipts': {
     post: protectedOperation(
       operation({
@@ -1557,6 +1619,7 @@ export const openApiSpec = {
     { name: 'Vendors' },
     { name: 'Purchase Orders' },
     { name: 'Receipts' },
+    { name: 'Payments' },
     { name: 'Invoices' },
     { name: 'Uploads' },
   ],
