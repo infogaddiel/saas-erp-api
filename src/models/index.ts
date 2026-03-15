@@ -24,6 +24,7 @@ import Vendor from './Vendor';
 import PurchaseOrder from './PurchaseOrder';
 import Invoice from './Invoice';
 import InvoiceLineItem from './InvoiceLineItem';
+import Receipt from './Receipt';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -179,6 +180,10 @@ Invoice.hasMany(InvoiceLineItem, { foreignKey: 'invoice_id', as: 'lineItems' });
 InvoiceLineItem.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
 Item.hasMany(InvoiceLineItem, { foreignKey: 'item_id', as: 'invoiceLineItems' });
 
+// Receipt - Invoice (optional)
+Receipt.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+Invoice.hasMany(Receipt, { foreignKey: 'invoice_id', as: 'receipts' });
+
 export {
   User,
   Company,
@@ -206,4 +211,5 @@ export {
   PurchaseOrder,
   Invoice,
   InvoiceLineItem,
+  Receipt,
 };
