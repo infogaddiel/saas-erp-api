@@ -26,6 +26,7 @@ import Invoice from './Invoice';
 import InvoiceLineItem from './InvoiceLineItem';
 import Receipt from './Receipt';
 import Payment from './Payment';
+import CreditNote from './CreditNote';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -189,6 +190,10 @@ Invoice.hasMany(Receipt, { foreignKey: 'invoice_id', as: 'receipts' });
 Payment.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
 Invoice.hasMany(Payment, { foreignKey: 'invoice_id', as: 'payments' });
 
+// CreditNote - Invoice (optional)
+CreditNote.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+Invoice.hasMany(CreditNote, { foreignKey: 'invoice_id', as: 'creditNotes' });
+
 export {
   User,
   Company,
@@ -218,4 +223,5 @@ export {
   InvoiceLineItem,
   Receipt,
   Payment,
+  CreditNote,
 };

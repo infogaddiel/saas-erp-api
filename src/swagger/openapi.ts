@@ -108,6 +108,13 @@ import {
   listPaymentsSchema,
   idParamSchema as paymentIdParamSchema,
 } from '../payments/paymentValidator';
+import {
+  createCreditNoteSchema,
+  updateCreditNoteSchema,
+  listCreditNotesSchema,
+  exportCreditNotesQuerySchema,
+  idParamSchema as creditNoteIdParamSchema,
+} from '../creditNotes/creditNoteValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -1487,6 +1494,156 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/credit-notes': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create credit note',
+        tags: ['Credit Notes'],
+        requestBody: jsonRequestBody(createCreditNoteSchema),
+        responses: {
+          201: successResponse('Credit note created'),
+          200: successResponse('Credit note created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List credit notes',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(listCreditNotesSchema, 'query'),
+        responses: {
+          200: successResponse('Credit notes fetched'),
+        },
+      })
+    ),
+  },
+  '/api/credit-notes/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export credit notes to Excel',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(exportCreditNotesQuerySchema, 'query'),
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/credit-notes/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get credit note by id',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Credit note fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update credit note',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateCreditNoteSchema),
+        responses: {
+          200: successResponse('Credit note updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete credit note',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Credit note deleted'),
+        },
+      })
+    ),
+  },
+  '/api/debit-notes': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create debit note',
+        tags: ['Debit Notes'],
+        requestBody: jsonRequestBody(createCreditNoteSchema),
+        responses: {
+          201: successResponse('Debit note created'),
+          200: successResponse('Debit note created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List debit notes',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(listCreditNotesSchema, 'query'),
+        responses: {
+          200: successResponse('Debit notes fetched'),
+        },
+      })
+    ),
+  },
+  '/api/debit-notes/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export debit notes to Excel',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(exportCreditNotesQuerySchema, 'query'),
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/debit-notes/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get debit note by id',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Debit note fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update debit note',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateCreditNoteSchema),
+        responses: {
+          200: successResponse('Debit note updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete debit note',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Debit note deleted'),
+        },
+      })
+    ),
+  },
   '/api/invoices': {
     post: protectedOperation(
       operation({
@@ -1620,6 +1777,8 @@ export const openApiSpec = {
     { name: 'Purchase Orders' },
     { name: 'Receipts' },
     { name: 'Payments' },
+    { name: 'Credit Notes' },
+    { name: 'Debit Notes' },
     { name: 'Invoices' },
     { name: 'Uploads' },
   ],
