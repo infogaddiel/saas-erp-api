@@ -41,6 +41,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions));
+app.enable('trust proxy');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.resolve(__dirname, '..', 'uploads')));
