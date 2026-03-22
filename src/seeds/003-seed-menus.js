@@ -5,9 +5,11 @@ module.exports = {
     const menus = [
       { name: 'Dashboard', description: 'Main dashboard' },
       { name: 'Sales', description: 'Sales management' },
+      { name: 'Purchase', description: 'Purchase management' },
       { name: 'Inventory', description: 'Inventory management' },
       { name: 'Staff & Technician', description: 'Staff and technician management' },
       { name: 'Ticket & Service', description: 'Ticket and service management' },
+      { name: 'Finance', description: 'Finance management' },
       { name: 'Settings', description: 'Application settings' },
     ];
 
