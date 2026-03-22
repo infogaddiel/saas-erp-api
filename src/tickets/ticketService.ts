@@ -9,6 +9,7 @@ import {
   TicketService as TicketServiceModel,
   Contract,
 } from '../models';
+import { formatDateToDMYISO } from '../utils/common';
 
 /** Convert dd-mm-yyyy[ HH:mm[:ss]] to YYYY-MM-DD HH:mm:ss for DATETIME storage */
 function parseScheduledDate(value: string | null | undefined): string | null {
@@ -140,7 +141,6 @@ export const createTicket = async (data: CreateTicketInput, companyCode?: string
           if (!statusId) throw new Error('Open ticket status not found');
 
           const ticketNumber = await generateNextTicketNumber(companyCode, transaction);
-
           const createdTicket = await Ticket.create(
             {
               ticket_number: ticketNumber,
@@ -150,7 +150,7 @@ export const createTicket = async (data: CreateTicketInput, companyCode?: string
               priority: data.priority ?? 'Medium',
               service_type: data.service_type,
               assigned_technician_id: data.assigned_technician_id ?? null,
-              scheduled_date: data.scheduled_date ?? undefined,
+              scheduled_date: formatDateToDMYISO(data.scheduled_date) ?? undefined,
               equipment_type: data.equipment_type ?? null,
               equipment_model: data.equipment_model ?? null,
               issue_description: data.issue_description,
@@ -343,7 +343,7 @@ export const updateTicket = async (id: number, updates: UpdateTicketInput) => {
       delete payload.changed_by;
 
       if (updates.scheduled_date !== undefined) {
-        payload.scheduled_date = updates.scheduled_date;
+        payload.scheduled_date = formatDateToDMYISO(updates.scheduled_date);
       }
 
       await ticket.update(payload, { transaction });
