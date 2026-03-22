@@ -67,7 +67,7 @@ const contractInclude = [
     as: 'lineItems',
     required: false,
     include: [
-      { model: Item, as: 'item', attributes: ['id', 'item_name', 'item_code'] },
+      { model: Item, as: 'item', required: false, attributes: ['id', 'item_name', 'item_code'] },
       {
         model: ServiceSchedule,
         as: 'serviceSchedules',
