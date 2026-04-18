@@ -100,6 +100,37 @@ export const getItemById = async (id: number) => {
   }
 };
 
+export const getItemsForDropdown = async (filters?: { searchText?: string; status?: boolean }) => {
+  try {
+    const where: any = {};
+
+    if (filters?.status != null) {
+      where.status = filters.status;
+    }
+
+    const searchText = filters?.searchText?.trim();
+    if (searchText) {
+      where[Op.or] = [
+        { item_name: { [Op.iLike]: `%${searchText}%` } },
+        { item_code: { [Op.iLike]: `%${searchText}%` } },
+        { type: { [Op.iLike]: `%${searchText}%` } },
+        { category: { [Op.iLike]: `%${searchText}%` } },
+      ];
+    }
+
+    const rows = await Item.findAll({
+      attributes: ['id', 'item_name', 'item_code', 'type', 'category', 'unit', 'status'],
+      where,
+      order: [['item_name', 'ASC']],
+    });
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error('getItemsForDropdown error:', error);
+    return { success: false, message: 'Error fetching items for dropdown' };
+  }
+};
+
 export const updateItem = async (id: number, updates: Partial<CreateItemInput>) => {
   try {
     const item = await Item.findByPk(id);

@@ -3,11 +3,20 @@ import {
   createItem,
   getItems,
   getItemById,
+  getItemsForDropdown,
   updateItem,
   deleteItem,
   bulkCreateItems,
   exportItemsToExcel,
 } from './itemService';
+
+const parseBooleanQuery = (value: unknown): boolean | undefined => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return undefined;
+  if (value.toLowerCase() === 'true') return true;
+  if (value.toLowerCase() === 'false') return false;
+  return undefined;
+};
 
 export const create = async (req: Request, res: Response) => {
   try {
@@ -78,6 +87,21 @@ export const getById = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Get item controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const searchText = (req.query.searchText as string) || undefined;
+    const status = parseBooleanQuery(req.query.status);
+
+    const result = await getItemsForDropdown({ searchText, status });
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown items controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

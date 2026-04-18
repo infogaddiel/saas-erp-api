@@ -35,6 +35,7 @@ import {
   createItemSchema,
   updateItemSchema,
   listItemsSchema,
+  dropdownItemsSchema,
   idParamSchema as itemIdParamSchema,
   bulkCreateItemsSchema,
 } from '../items/itemValidator';
@@ -653,6 +654,18 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(listItemsSchema, 'query'),
         responses: {
           200: successResponse('Items fetched'),
+        },
+      })
+    ),
+  },
+  '/api/items/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get item dropdown options',
+        tags: ['Items'],
+        parameters: makeParameters(dropdownItemsSchema, 'query'),
+        responses: {
+          200: successResponse('Items dropdown fetched'),
         },
       })
     ),

@@ -38,6 +38,11 @@ export const listItemsSchema = Joi.object({
   code: Joi.string().max(100).optional(),
 });
 
+export const dropdownItemsSchema = Joi.object({
+  searchText: Joi.string().max(255).optional().allow(''),
+  status: Joi.boolean().optional(),
+});
+
 export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });
