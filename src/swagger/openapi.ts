@@ -40,6 +40,16 @@ import {
   bulkCreateItemsSchema,
 } from '../items/itemValidator';
 import {
+  createQuestionSchema,
+  idParamSchema as questionIdParamSchema,
+} from '../questions/questionValidator';
+import {
+  createUserFeedbackSchema,
+  updateUserFeedbackSchema,
+  listUserFeedbackSchema,
+  idParamSchema as userFeedbackIdParamSchema,
+} from '../userFeedback/userFeedbackValidator';
+import {
   createTicketSchema,
   updateTicketSchema,
   listTicketsSchema,
@@ -730,6 +740,86 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(itemIdParamSchema, 'path'),
         responses: {
           200: successResponse('Item deleted'),
+        },
+      })
+    ),
+  },
+  '/api/questions': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create question',
+        tags: ['Questions'],
+        requestBody: jsonRequestBody(createQuestionSchema),
+        responses: {
+          201: successResponse('Question created'),
+          200: successResponse('Question created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List questions without pagination',
+        tags: ['Questions'],
+        responses: {
+          200: successResponse('Questions fetched'),
+        },
+      })
+    ),
+  },
+  '/api/questions/{id}': {
+    delete: protectedOperation(
+      operation({
+        summary: 'Soft delete question',
+        tags: ['Questions'],
+        parameters: makeParameters(questionIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Question deleted'),
+        },
+      })
+    ),
+  },
+  '/api/user-feedback': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create user feedback',
+        tags: ['User Feedback'],
+        requestBody: jsonRequestBody(createUserFeedbackSchema),
+        responses: {
+          201: successResponse('User feedback created'),
+          200: successResponse('User feedback created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List user feedback with pagination and filters',
+        tags: ['User Feedback'],
+        parameters: makeParameters(listUserFeedbackSchema, 'query'),
+        responses: {
+          200: successResponse('User feedback fetched'),
+        },
+      })
+    ),
+  },
+  '/api/user-feedback/{id}': {
+    put: protectedOperation(
+      operation({
+        summary: 'Update user feedback',
+        tags: ['User Feedback'],
+        parameters: makeParameters(userFeedbackIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateUserFeedbackSchema),
+        responses: {
+          200: successResponse('User feedback updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete user feedback',
+        tags: ['User Feedback'],
+        parameters: makeParameters(userFeedbackIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('User feedback deleted'),
         },
       })
     ),
@@ -1782,6 +1872,8 @@ export const openApiSpec = {
     { name: 'Customers' },
     { name: 'Users' },
     { name: 'Items' },
+    { name: 'Questions' },
+    { name: 'User Feedback' },
     { name: 'Tickets' },
     { name: 'Contracts' },
     { name: 'Projects' },

@@ -27,6 +27,8 @@ import InvoiceLineItem from './InvoiceLineItem';
 import Receipt from './Receipt';
 import Payment from './Payment';
 import CreditNote from './CreditNote';
+import Question from './Question';
+import UserFeedback from './UserFeedback';
 
 // Define associations
 User.belongsTo(Company, { foreignKey: 'company_id', as: 'company' });
@@ -194,6 +196,14 @@ Invoice.hasMany(Payment, { foreignKey: 'invoice_id', as: 'payments' });
 CreditNote.belongsTo(Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
 Invoice.hasMany(CreditNote, { foreignKey: 'invoice_id', as: 'creditNotes' });
 
+// UserFeedback - User
+UserFeedback.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(UserFeedback, { foreignKey: 'user_id', as: 'userFeedbacks' });
+
+// UserFeedback - Question
+UserFeedback.belongsTo(Question, { foreignKey: 'question_id', as: 'question' });
+Question.hasMany(UserFeedback, { foreignKey: 'question_id', as: 'userFeedbacks' });
+
 export {
   User,
   Company,
@@ -224,4 +234,6 @@ export {
   Receipt,
   Payment,
   CreditNote,
+  Question,
+  UserFeedback,
 };
