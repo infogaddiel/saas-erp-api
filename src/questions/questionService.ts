@@ -28,6 +28,7 @@ export const createQuestion = async (data: CreateQuestionInput) => {
 export const getQuestions = async () => {
   try {
     const rows = await Question.findAll({
+      where: { is_deleted: false },
       order: [
         ['created_at', 'DESC'],
         ['id', 'DESC'],

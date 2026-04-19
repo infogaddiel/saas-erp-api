@@ -8,7 +8,12 @@ import {
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const result = await createUserFeedback(req.body);
+    const userId = req.user?.id;
+
+    const result = await createUserFeedback({
+      ...req.body,
+      user_id: userId,
+    });
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;
       return res.status(statusCode).json(result);

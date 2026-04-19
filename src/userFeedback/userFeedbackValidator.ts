@@ -1,7 +1,6 @@
 import Joi from 'joi';
 
 export const createUserFeedbackSchema = Joi.object({
-  user_id: Joi.number().integer().positive().required(),
   question_id: Joi.number().integer().positive().required(),
   feedback: Joi.string().trim().required(),
 });

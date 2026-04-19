@@ -213,12 +213,14 @@ const protectedOperation = (operation: Record<string, unknown>) => ({
 
 const operation = (config: {
   summary: string;
+  description?: string;
   tags: string[];
   parameters?: Record<string, unknown>[];
   requestBody?: Record<string, unknown>;
   responses?: Record<string, unknown>;
 }) => ({
   summary: config.summary,
+  description: config.description,
   tags: config.tags,
   parameters: config.parameters,
   requestBody: config.requestBody,
@@ -782,6 +784,7 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
     post: protectedOperation(
       operation({
         summary: 'Create user feedback',
+        description: 'Creates feedback for the authenticated user. The user_id is taken from the bearer token, not the request body.',
         tags: ['User Feedback'],
         requestBody: jsonRequestBody(createUserFeedbackSchema),
         responses: {
