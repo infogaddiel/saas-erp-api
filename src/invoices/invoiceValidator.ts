@@ -83,3 +83,6 @@ export const idParamSchema = Joi.object({
   id: Joi.number().integer().positive().required(),
 });
 
+export const dropdownInvoiceSchema = Joi.object({
+  searchText: Joi.string().max(255).optional().allow(''),
+});

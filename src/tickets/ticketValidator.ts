@@ -112,6 +112,8 @@ export const createTicketServiceSchema = Joi.object({
   video: Joi.string().optional().allow(null, ''),
   customer_signature: Joi.string().optional().allow(null, ''),
   report_status: Joi.string().max(50).optional().default('Draft'),
+  customer_remark: Joi.string().max(5000).optional().allow(null, ''),
+  rating: Joi.string().max(10).optional().allow(null, '')
 });
 
 export const updateTicketServiceSchema = Joi.object({
@@ -133,4 +135,6 @@ export const updateTicketServiceSchema = Joi.object({
   video: Joi.string().optional().allow(null, ''),
   customer_signature: Joi.string().optional().allow(null, ''),
   report_status: Joi.string().max(50).optional(),
+  customer_remark: Joi.string().max(5000).optional().allow(null, ''),
+  rating: Joi.string().max(10).optional().allow(null, '')
 }).min(1);

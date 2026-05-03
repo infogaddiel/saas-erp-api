@@ -7,10 +7,11 @@ import {
   getDebitNotes,
   updateDebitNote,
 } from '../creditNotes/creditNoteService';
+import { getCompanyCode } from '../utils/common';
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const result = await createDebitNote(req.body);
+    const result = await createDebitNote(req.body, getCompanyCode(req));
 
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;

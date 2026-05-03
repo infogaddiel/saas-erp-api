@@ -106,6 +106,8 @@ export const getItemsForDropdown = async (filters?: { searchText?: string; statu
 
     if (filters?.status != null) {
       where.status = filters.status;
+    }else{
+      where.status = true;
     }
 
     const searchText = filters?.searchText?.trim();
@@ -119,7 +121,7 @@ export const getItemsForDropdown = async (filters?: { searchText?: string; statu
     }
 
     const rows = await Item.findAll({
-      attributes: ['id', 'item_name', 'item_code', 'type', 'category', 'unit', 'status'],
+      attributes: ['id', 'item_name', 'item_code', 'type', 'category', 'unit','unit_price','stock_quantity','gst_percentage', 'status'],
       where,
       order: [['item_name', 'ASC']],
     });

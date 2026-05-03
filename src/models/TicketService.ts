@@ -22,6 +22,8 @@ class TicketService extends Model {
   public video!: string | null;
   public customer_signature!: string | null;
   public report_status!: string;
+  public customer_remark!: string;
+  public rating!: string;
   public deleted_at!: Date | null;
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -137,6 +139,14 @@ TicketService.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: 'Draft',
+    },
+    customer_remark: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    rating: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
     },
     deleted_at: {
       type: DataTypes.DATE,

@@ -7,6 +7,7 @@ class CreditNote extends Model {
   public id!: number;
   public type!: CreditDebitNoteType;
   public customer_name!: string;
+  public crn_number!: string;
   public invoice_id!: number | null;
   public issue_date!: string;
   public amount!: number;
@@ -25,6 +26,10 @@ CreditNote.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    crn_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
     },
     type: {
       type: DataTypes.STRING(20),

@@ -25,6 +25,28 @@ export const createQuestion = async (data: CreateQuestionInput) => {
   }
 };
 
+export const updateQuestion = async (id: number, data: { question: string; type?: string | null; }) => {
+  try {
+    // 1. Find the question by its primary key
+    const questionToUpdate = await Question.findByPk(id);
+
+    if (!questionToUpdate) {
+      return { success: false, message: 'Question not found' };
+    }
+
+    // 2. Perform the update with normalized inputs
+    await questionToUpdate.update({
+      question: data.question.trim(),
+      type: normalizeOptionalText(data.type),
+    });
+
+    return { success: true, data: questionToUpdate };
+  } catch (error) {
+    console.error('updateQuestion error:', error);
+    return { success: false, message: 'Error updating question' };
+  }
+};
+
 export const getQuestions = async () => {
   try {
     const rows = await Question.findAll({

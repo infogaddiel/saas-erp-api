@@ -29,8 +29,9 @@ interface CreateInvoiceInput {
   created_by?: number | null;
 }
 
-interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> {}
-
+interface UpdateInvoiceInput extends Partial<CreateInvoiceInput> { }
+const DEFAULT_INVOICE_PREFIX = 'SEM';
+const INVOICE_NUMBER_MIDDLE = 'INV';
 const normalizeOptionalText = (value: string | null | undefined): string | null => {
   if (value == null) return null;
   const normalized = String(value).trim();
@@ -66,7 +67,26 @@ const ensureItemsExist = async (lineItems: InvoiceLineItemInput[]) => {
   return { ok: true as const };
 };
 
-export const createInvoice = async (data: CreateInvoiceInput) => {
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_INVOICE_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return INVOICE_NUMBER_MIDDLE;
+  return normalized;
+};
+
+const generateNextInvoiceNumber = async (
+  companyCode: string | null | undefined): Promise<string> => {
+  const prefix = getCompanyPrefix(companyCode);
+  const numberPrefix = `${prefix}${INVOICE_NUMBER_MIDDLE}00`;
+
+  const invoiceCount = await Invoice.unscoped().count({
+    where: { deleted_at: { [Op.is]: null } },
+  });
+
+  return `${numberPrefix}${invoiceCount + 1}`;
+};
+
+export const createInvoice = async (data: CreateInvoiceInput, companyCode?: string | null) => {
   try {
     const normalizedPaymentStatus = normalizeOptionalText(data.payment_status);
     const normalizedNotes = normalizeOptionalText(data.notes);
@@ -82,11 +102,12 @@ export const createInvoice = async (data: CreateInvoiceInput) => {
     if (!existsCheck.ok) {
       return { success: false, message: `Item not found: ${existsCheck.missing.join(', ')}`, statusCode: 404 };
     }
-
+    const invoiceNumber = await generateNextInvoiceNumber(companyCode);
     const created = await sequelize.transaction(async (transaction) => {
       const invoice = await Invoice.create(
         {
           customer_name: data.customer_name,
+          invoice_number: invoiceNumber,
           payment_status: normalizedPaymentStatus,
           invoice_date: invoiceDate,
           due_date: dueDate,
@@ -166,6 +187,31 @@ export const getInvoices = async (
   } catch (error) {
     console.error('getInvoices error:', error);
     return { success: false, message: 'Error fetching invoices' };
+  }
+};
+
+export const getInvoiceForDropdown = async (filters?: { searchText?: string; }) => {
+  try {
+    const where: any = {};
+
+    const searchText = filters?.searchText?.trim();
+    if (searchText) {
+      where[Op.or] = [
+        { customer_name: { [Op.iLike]: `%${searchText}%` } },
+        { invoice_number: { [Op.iLike]: `%${searchText}%` } },
+      ];
+    }
+
+    const rows = await Invoice.findAll({
+      attributes: ['id', 'customer_name', 'invoice_number', 'payment_status', 'total_amount'],
+      where,
+      order: [['customer_name', 'ASC']],
+    });
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error('getInvoiceForDropdown error:', error);
+    return { success: false, message: 'Error fetching invoice for dropdown' };
   }
 };
 

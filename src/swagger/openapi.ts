@@ -106,6 +106,7 @@ import {
   updateInvoiceSchema,
   listInvoicesSchema,
   idParamSchema as invoiceIdParamSchema,
+  dropdownInvoiceSchema,
 } from '../invoices/invoiceValidator';
 import {
   createReceiptSchema,
@@ -769,6 +770,17 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
     ),
   },
   '/api/questions/{id}': {
+     put: protectedOperation(
+      operation({
+        summary: 'Update Question',
+        tags: ['Update Question'],
+        parameters: makeParameters(questionIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(createQuestionSchema),
+        responses: {
+          200: successResponse('Question updated'),
+        },
+      })
+    ),
     delete: protectedOperation(
       operation({
         summary: 'Soft delete question',
@@ -1769,6 +1781,18 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(listInvoicesSchema, 'query'),
         responses: {
           200: successResponse('Invoices fetched'),
+        },
+      })
+    ),
+  },
+   '/api/invoices/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get item dropdown options',
+        tags: ['Invoices'],
+        parameters: makeParameters(dropdownInvoiceSchema, 'query'),
+        responses: {
+          200: successResponse('Items dropdown fetched'),
         },
       })
     ),

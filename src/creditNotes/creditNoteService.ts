@@ -14,7 +14,7 @@ interface CreateNoteInput {
   notes?: string | null;
 }
 
-interface UpdateNoteInput extends Partial<CreateNoteInput> {}
+interface UpdateNoteInput extends Partial<CreateNoteInput> { }
 
 interface ListNotesFilters {
   date_from?: string;
@@ -25,7 +25,9 @@ interface ExportNotesFilters {
   date_from?: string;
   date_to?: string;
 }
-
+const DEFAULT_CRN_PREFIX = 'SEM';
+const CRN_NUMBER_MIDDLE = 'CRN';
+const DBN_NUMBER_MIDDLE = 'DBN';
 const normalizeOptionalText = (value: string | null | undefined): string | null => {
   if (value == null) return null;
   const normalized = String(value).trim();
@@ -33,7 +35,7 @@ const normalizeOptionalText = (value: string | null | undefined): string | null 
 };
 
 const creditNoteInclude = [
-  { model: Invoice, as: 'invoice', attributes: ['id', 'customer_name', 'invoice_date', 'total_amount'], required: false },
+  { model: Invoice, as: 'invoice', attributes: ['id', 'invoice_number', 'customer_name', 'invoice_date', 'total_amount'], required: false },
 ];
 
 const buildDateRangeWhere = (date_from?: string, date_to?: string): any => {
@@ -56,15 +58,34 @@ const mergeWhereWithType = (type: CreditDebitNoteType, dateFrom?: string, dateTo
 
 const noteLabel = (type: CreditDebitNoteType) => (type === 'credit' ? 'Credit note' : 'Debit note');
 
-export const createCreditNote = async (data: CreateNoteInput) => {
-  return createNote('credit', data);
+export const createCreditNote = async (data: CreateNoteInput, companyCode?: string | null) => {
+  return createNote('credit', data, companyCode);
 };
 
-export const createDebitNote = async (data: CreateNoteInput) => {
-  return createNote('debit', data);
+export const createDebitNote = async (data: CreateNoteInput, companyCode?: string | null) => {
+  return createNote('debit', data, companyCode);
 };
 
-const createNote = async (noteType: CreditDebitNoteType, data: CreateNoteInput) => {
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_CRN_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return CRN_NUMBER_MIDDLE;
+  return normalized;
+};
+
+const generateNextCrnNumber = async (
+  companyCode: string | null | undefined, noteType: CreditDebitNoteType): Promise<string> => {
+  const prefix = getCompanyPrefix(companyCode);
+  const numberPrefix = noteType === 'credit' ? `${prefix}${CRN_NUMBER_MIDDLE}00` : `${prefix}${DBN_NUMBER_MIDDLE}00`;
+
+  const invoiceCount = await CreditNote.unscoped().count({
+    where: { type: noteType, deleted_at: { [Op.is]: null } },
+  });
+
+  return `${numberPrefix}${invoiceCount + 1}`;
+};
+
+const createNote = async (noteType: CreditDebitNoteType, data: CreateNoteInput, companyCode?: string | null) => {
   try {
     if (data.invoice_id != null) {
       const invoice = await Invoice.findByPk(data.invoice_id);
@@ -72,10 +93,11 @@ const createNote = async (noteType: CreditDebitNoteType, data: CreateNoteInput) 
         return { success: false, message: 'Invoice not found', statusCode: 404 };
       }
     }
-
+    const crnNumber = await generateNextCrnNumber(companyCode, noteType);
     const record = await CreditNote.create({
       type: noteType,
       customer_name: data.customer_name,
+      crn_number: crnNumber,
       invoice_id: data.invoice_id ?? null,
       issue_date: data.issue_date,
       amount: data.amount,

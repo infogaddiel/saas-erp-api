@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 class Invoice extends Model {
   public id!: number;
   public customer_name!: string;
+  public invoice_number!: string;
   public payment_status!: string | null;
   public invoice_date!: string | null;
   public due_date!: string | null;
@@ -24,6 +25,10 @@ Invoice.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    invoice_number: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
     },
     customer_name: {
       type: DataTypes.STRING(255),

@@ -4,9 +4,11 @@ import {
   deleteInvoice,
   exportInvoicesToExcel,
   getInvoiceById,
+  getInvoiceForDropdown,
   getInvoices,
   updateInvoice,
 } from './invoiceService';
+import { getCompanyCode, parseBooleanQuery } from '../utils/common';
 
 const getUserId = (req: Request): number | null => {
   const rawUserId = req.user?.id;
@@ -20,7 +22,7 @@ export const create = async (req: Request, res: Response) => {
     const result = await createInvoice({
       ...req.body,
       created_by: getUserId(req),
-    });
+    }, getCompanyCode(req));
 
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;
@@ -107,6 +109,19 @@ export const exportExcel = async (_req: Request, res: Response) => {
     res.end();
   } catch (error) {
     console.error('Export invoices controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const dropdown = async (req: Request, res: Response) => {
+  try {
+    const searchText = (req.query.searchText as string) || undefined;
+    const result = await getInvoiceForDropdown({ searchText });
+    if (!result.success) return res.status(500).json(result);
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Dropdown items controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

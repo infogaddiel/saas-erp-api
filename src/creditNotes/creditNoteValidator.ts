@@ -43,6 +43,7 @@ export const updateCreditNoteSchema = Joi.object({
   customer_name: Joi.string().trim().min(1).max(255).optional(),
   invoice_id: Joi.number().integer().positive().optional().allow(null),
   issue_date: optionalDateOnlySchema,
+  crn_number: Joi.string().max(50),
   amount: Joi.number().min(0).optional(),
   reason: Joi.string().trim().min(1).max(255).optional(),
   status: Joi.string().trim().min(1).max(50).optional(),
