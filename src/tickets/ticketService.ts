@@ -58,9 +58,11 @@ interface CreateTicketServiceInput {
   video?: string | null;
   customer_signature?: string | null;
   report_status?: string;
+  customer_remark?: string;
+  rating?: string;
 }
 
-interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> {}
+interface UpdateTicketServiceInput extends Partial<Omit<CreateTicketServiceInput, 'ticket_id'>> { }
 
 const OPEN_STATUS_NAME = 'Open';
 const DEFAULT_TICKET_PREFIX = 'GED';
@@ -451,6 +453,8 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       photos: photoList,
       video,
       customer_signature: customerSignature,
+      customer_remark: data.customer_remark ?? null,
+      rating:data.rating ?? null,
       report_status: reportStatus,
     });
 

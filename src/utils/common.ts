@@ -23,3 +23,10 @@ export const formatDateToDMYISO = (dateStr: string | null | undefined) => {
   // 3. Return the string format the API expects
   return date.format('YYYY-MM-DD');
 };
+export const parseBooleanQuery = (value: unknown): boolean | undefined => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return undefined;
+  if (value.toLowerCase() === 'true') return true;
+  if (value.toLowerCase() === 'false') return false;
+  return undefined;
+};

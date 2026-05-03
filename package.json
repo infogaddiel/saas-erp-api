@@ -18,6 +18,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "db:migrate": "sequelize db:migrate",
     "seed": "sequelize db:seed:all",
     "seed:undo": "sequelize db:seed:undo:all",
     "seed:create": "sequelize seed:generate",

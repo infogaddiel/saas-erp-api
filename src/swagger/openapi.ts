@@ -35,9 +35,20 @@ import {
   createItemSchema,
   updateItemSchema,
   listItemsSchema,
+  dropdownItemsSchema,
   idParamSchema as itemIdParamSchema,
   bulkCreateItemsSchema,
 } from '../items/itemValidator';
+import {
+  createQuestionSchema,
+  idParamSchema as questionIdParamSchema,
+} from '../questions/questionValidator';
+import {
+  createUserFeedbackSchema,
+  updateUserFeedbackSchema,
+  listUserFeedbackSchema,
+  idParamSchema as userFeedbackIdParamSchema,
+} from '../userFeedback/userFeedbackValidator';
 import {
   createTicketSchema,
   updateTicketSchema,
@@ -90,6 +101,32 @@ import {
   listPurchaseOrdersSchema,
   idParamSchema as purchaseOrderIdParamSchema,
 } from '../purchaseOrders/purchaseOrderValidator';
+import {
+  createInvoiceSchema,
+  updateInvoiceSchema,
+  listInvoicesSchema,
+  idParamSchema as invoiceIdParamSchema,
+  dropdownInvoiceSchema,
+} from '../invoices/invoiceValidator';
+import {
+  createReceiptSchema,
+  updateReceiptSchema,
+  listReceiptsSchema,
+  idParamSchema as receiptIdParamSchema,
+} from '../receipts/receiptValidator';
+import {
+  createPaymentSchema,
+  updatePaymentSchema,
+  listPaymentsSchema,
+  idParamSchema as paymentIdParamSchema,
+} from '../payments/paymentValidator';
+import {
+  createCreditNoteSchema,
+  updateCreditNoteSchema,
+  listCreditNotesSchema,
+  exportCreditNotesQuerySchema,
+  idParamSchema as creditNoteIdParamSchema,
+} from '../creditNotes/creditNoteValidator';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete';
 
@@ -177,12 +214,14 @@ const protectedOperation = (operation: Record<string, unknown>) => ({
 
 const operation = (config: {
   summary: string;
+  description?: string;
   tags: string[];
   parameters?: Record<string, unknown>[];
   requestBody?: Record<string, unknown>;
   responses?: Record<string, unknown>;
 }) => ({
   summary: config.summary,
+  description: config.description,
   tags: config.tags,
   parameters: config.parameters,
   requestBody: config.requestBody,
@@ -632,6 +671,18 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/items/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get item dropdown options',
+        tags: ['Items'],
+        parameters: makeParameters(dropdownItemsSchema, 'query'),
+        responses: {
+          200: successResponse('Items dropdown fetched'),
+        },
+      })
+    ),
+  },
   '/api/items/bulk/create': {
     post: protectedOperation(
       operation({
@@ -692,6 +743,98 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
         parameters: makeParameters(itemIdParamSchema, 'path'),
         responses: {
           200: successResponse('Item deleted'),
+        },
+      })
+    ),
+  },
+  '/api/questions': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create question',
+        tags: ['Questions'],
+        requestBody: jsonRequestBody(createQuestionSchema),
+        responses: {
+          201: successResponse('Question created'),
+          200: successResponse('Question created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List questions without pagination',
+        tags: ['Questions'],
+        responses: {
+          200: successResponse('Questions fetched'),
+        },
+      })
+    ),
+  },
+  '/api/questions/{id}': {
+     put: protectedOperation(
+      operation({
+        summary: 'Update Question',
+        tags: ['Update Question'],
+        parameters: makeParameters(questionIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(createQuestionSchema),
+        responses: {
+          200: successResponse('Question updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Soft delete question',
+        tags: ['Questions'],
+        parameters: makeParameters(questionIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Question deleted'),
+        },
+      })
+    ),
+  },
+  '/api/user-feedback': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create user feedback',
+        description: 'Creates feedback for the authenticated user. The user_id is taken from the bearer token, not the request body.',
+        tags: ['User Feedback'],
+        requestBody: jsonRequestBody(createUserFeedbackSchema),
+        responses: {
+          201: successResponse('User feedback created'),
+          200: successResponse('User feedback created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List user feedback with pagination and filters',
+        tags: ['User Feedback'],
+        parameters: makeParameters(listUserFeedbackSchema, 'query'),
+        responses: {
+          200: successResponse('User feedback fetched'),
+        },
+      })
+    ),
+  },
+  '/api/user-feedback/{id}': {
+    put: protectedOperation(
+      operation({
+        summary: 'Update user feedback',
+        tags: ['User Feedback'],
+        parameters: makeParameters(userFeedbackIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateUserFeedbackSchema),
+        responses: {
+          200: successResponse('User feedback updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete user feedback',
+        tags: ['User Feedback'],
+        parameters: makeParameters(userFeedbackIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('User feedback deleted'),
         },
       })
     ),
@@ -1357,6 +1500,354 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/payments': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create payment',
+        tags: ['Payments'],
+        requestBody: jsonRequestBody(createPaymentSchema),
+        responses: {
+          201: successResponse('Payment created'),
+          200: successResponse('Payment created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List payments',
+        tags: ['Payments'],
+        parameters: makeParameters(listPaymentsSchema, 'query'),
+        responses: {
+          200: successResponse('Payments fetched'),
+        },
+      })
+    ),
+  },
+  '/api/payments/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get payment by id',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Payment fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update payment',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updatePaymentSchema),
+        responses: {
+          200: successResponse('Payment updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete payment',
+        tags: ['Payments'],
+        parameters: makeParameters(paymentIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Payment deleted'),
+        },
+      })
+    ),
+  },
+  '/api/receipts': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create receipt',
+        tags: ['Receipts'],
+        requestBody: jsonRequestBody(createReceiptSchema),
+        responses: {
+          201: successResponse('Receipt created'),
+          200: successResponse('Receipt created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List receipts',
+        tags: ['Receipts'],
+        parameters: makeParameters(listReceiptsSchema, 'query'),
+        responses: {
+          200: successResponse('Receipts fetched'),
+        },
+      })
+    ),
+  },
+  '/api/receipts/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get receipt by id',
+        tags: ['Receipts'],
+        parameters: makeParameters(receiptIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Receipt fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update receipt',
+        tags: ['Receipts'],
+        parameters: makeParameters(receiptIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateReceiptSchema),
+        responses: {
+          200: successResponse('Receipt updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete receipt',
+        tags: ['Receipts'],
+        parameters: makeParameters(receiptIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Receipt deleted'),
+        },
+      })
+    ),
+  },
+  '/api/credit-notes': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create credit note',
+        tags: ['Credit Notes'],
+        requestBody: jsonRequestBody(createCreditNoteSchema),
+        responses: {
+          201: successResponse('Credit note created'),
+          200: successResponse('Credit note created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List credit notes',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(listCreditNotesSchema, 'query'),
+        responses: {
+          200: successResponse('Credit notes fetched'),
+        },
+      })
+    ),
+  },
+  '/api/credit-notes/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export credit notes to Excel',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(exportCreditNotesQuerySchema, 'query'),
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/credit-notes/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get credit note by id',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Credit note fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update credit note',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateCreditNoteSchema),
+        responses: {
+          200: successResponse('Credit note updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete credit note',
+        tags: ['Credit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Credit note deleted'),
+        },
+      })
+    ),
+  },
+  '/api/debit-notes': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create debit note',
+        tags: ['Debit Notes'],
+        requestBody: jsonRequestBody(createCreditNoteSchema),
+        responses: {
+          201: successResponse('Debit note created'),
+          200: successResponse('Debit note created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List debit notes',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(listCreditNotesSchema, 'query'),
+        responses: {
+          200: successResponse('Debit notes fetched'),
+        },
+      })
+    ),
+  },
+  '/api/debit-notes/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export debit notes to Excel',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(exportCreditNotesQuerySchema, 'query'),
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/debit-notes/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get debit note by id',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Debit note fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update debit note',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateCreditNoteSchema),
+        responses: {
+          200: successResponse('Debit note updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete debit note',
+        tags: ['Debit Notes'],
+        parameters: makeParameters(creditNoteIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Debit note deleted'),
+        },
+      })
+    ),
+  },
+  '/api/invoices': {
+    post: protectedOperation(
+      operation({
+        summary: 'Create invoice',
+        tags: ['Invoices'],
+        requestBody: jsonRequestBody(createInvoiceSchema),
+        responses: {
+          201: successResponse('Invoice created'),
+          200: successResponse('Invoice created'),
+        },
+      })
+    ),
+    get: protectedOperation(
+      operation({
+        summary: 'List invoices',
+        tags: ['Invoices'],
+        parameters: makeParameters(listInvoicesSchema, 'query'),
+        responses: {
+          200: successResponse('Invoices fetched'),
+        },
+      })
+    ),
+  },
+   '/api/invoices/dropdown': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get item dropdown options',
+        tags: ['Invoices'],
+        parameters: makeParameters(dropdownInvoiceSchema, 'query'),
+        responses: {
+          200: successResponse('Items dropdown fetched'),
+        },
+      })
+    ),
+  },
+  '/api/invoices/export/excel': {
+    get: protectedOperation(
+      operation({
+        summary: 'Export invoices to Excel',
+        tags: ['Invoices'],
+        responses: {
+          200: {
+            description: 'Excel file',
+            content: {
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+        },
+      })
+    ),
+  },
+  '/api/invoices/{id}': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get invoice by id',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Invoice fetched'),
+        },
+      })
+    ),
+    put: protectedOperation(
+      operation({
+        summary: 'Update invoice',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        requestBody: jsonRequestBody(updateInvoiceSchema),
+        responses: {
+          200: successResponse('Invoice updated'),
+        },
+      })
+    ),
+    delete: protectedOperation(
+      operation({
+        summary: 'Delete invoice',
+        tags: ['Invoices'],
+        parameters: makeParameters(invoiceIdParamSchema, 'path'),
+        responses: {
+          200: successResponse('Invoice deleted'),
+        },
+      })
+    ),
+  },
   '/api/uploads': {
     post: protectedOperation(
       operation({
@@ -1408,12 +1899,19 @@ export const openApiSpec = {
     { name: 'Customers' },
     { name: 'Users' },
     { name: 'Items' },
+    { name: 'Questions' },
+    { name: 'User Feedback' },
     { name: 'Tickets' },
     { name: 'Contracts' },
     { name: 'Projects' },
     { name: 'Leads' },
     { name: 'Vendors' },
     { name: 'Purchase Orders' },
+    { name: 'Receipts' },
+    { name: 'Payments' },
+    { name: 'Credit Notes' },
+    { name: 'Debit Notes' },
+    { name: 'Invoices' },
     { name: 'Uploads' },
   ],
   components: {
