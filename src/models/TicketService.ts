@@ -15,6 +15,10 @@ class TicketService extends Model {
   public user_id!: number | null;
   public equipment_type!: string | null;
   public equipment_model!: string | null;
+  public outdoor_modal_no!: string | null;
+  public indoor_modal_no!: string | null;
+  public outdoor_serial_no!: string | null;
+  public indoor_serial_no!: string | null;
   public work_performed!: string | null;
   public parts_used!: string | null;
   public labor_hours!: number;
@@ -107,6 +111,22 @@ TicketService.init(
     },
     equipment_model: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    outdoor_modal_no: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    indoor_modal_no: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    outdoor_serial_no: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    indoor_serial_no: {
+      type: DataTypes.STRING(50),
       allowNull: true,
     },
     work_performed: {

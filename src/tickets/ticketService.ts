@@ -51,6 +51,10 @@ interface CreateTicketServiceInput {
   user_id?: number | null;
   equipment_type?: string | null;
   equipment_model?: string | null;
+  outdoor_modal_no?: string | null;
+  indoor_modal_no?: string | null;
+  outdoor_serial_no?: string | null;
+  indoor_serial_no?: string | null;
   work_performed?: string | null;
   parts_used?: string | null;
   labor_hours?: number;
@@ -447,6 +451,10 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       user_id: data.user_id ?? null,
       equipment_type: data.equipment_type ?? null,
       equipment_model: data.equipment_model ?? null,
+      outdoor_modal_no: data.outdoor_modal_no ?? null,
+      indoor_modal_no: data.indoor_modal_no ?? null,
+      outdoor_serial_no: data.outdoor_serial_no ?? null,
+      indoor_serial_no: data.indoor_serial_no ?? null,
       work_performed: data.work_performed ?? null,
       parts_used: data.parts_used ?? null,
       labor_hours: data.labor_hours ?? 0,
@@ -454,7 +462,7 @@ export const createTicketService = async (data: CreateTicketServiceInput) => {
       video,
       customer_signature: customerSignature,
       customer_remark: data.customer_remark ?? null,
-      rating:data.rating ?? null,
+      rating: data.rating ?? null,
       report_status: reportStatus,
     });
 
