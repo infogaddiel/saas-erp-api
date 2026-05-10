@@ -6,10 +6,11 @@ import {
   getReceipts,
   updateReceipt,
 } from './receiptService';
+import { getCompanyCode } from '../utils/common';
 
 export const create = async (req: Request, res: Response) => {
   try {
-    const result = await createReceipt(req.body);
+    const result = await createReceipt(req.body,getCompanyCode(req));
 
     if (!result.success) {
       const statusCode = (result as any).statusCode ?? 500;

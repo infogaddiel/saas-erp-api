@@ -5,6 +5,7 @@ class Receipt extends Model {
   public id!: number;
   public customer_name!: string;
   public receipt_date!: string;
+  public receipt_number!: string;
   public amount!: number;
   public payment_method!: string;
   public invoice_id!: number | null;
@@ -24,6 +25,10 @@ Receipt.init(
     },
     customer_name: {
       type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    receipt_number: {
+      type: DataTypes.STRING(50),
       allowNull: false,
     },
     receipt_date: {

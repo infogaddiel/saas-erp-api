@@ -11,12 +11,14 @@ interface CreateReceiptInput {
   notes?: string | null;
 }
 
-interface UpdateReceiptInput extends Partial<CreateReceiptInput> {}
+interface UpdateReceiptInput extends Partial<CreateReceiptInput> { }
 
 interface ListReceiptsFilters {
   date_from?: string;
   date_to?: string;
 }
+const DEFAULT_RECEIPT_PREFIX = 'SEM';
+const RECEIPT_NUMBER_MIDDLE = 'REC';
 
 const normalizeOptionalText = (value: string | null | undefined): string | null => {
   if (value == null) return null;
@@ -24,9 +26,9 @@ const normalizeOptionalText = (value: string | null | undefined): string | null 
   return normalized === '' ? null : normalized;
 };
 
-const receiptInclude = [{ model: Invoice, as: 'invoice', attributes: ['id', 'customer_name', 'invoice_date', 'total_amount'], required: false }];
+const receiptInclude = [{ model: Invoice, as: 'invoice', attributes: ['id', 'customer_name', 'invoice_date', 'total_amount','invoice_number'], required: false }];
 
-export const createReceipt = async (data: CreateReceiptInput) => {
+export const createReceipt = async (data: CreateReceiptInput, companyCode?: string | null) => {
   try {
     if (data.invoice_id != null) {
       const invoice = await Invoice.findByPk(data.invoice_id);
@@ -34,9 +36,10 @@ export const createReceipt = async (data: CreateReceiptInput) => {
         return { success: false, message: 'Invoice not found', statusCode: 404 };
       }
     }
-
+    const receiptNumber = await generateNextReceiptNumber(companyCode);
     const receipt = await Receipt.create({
       customer_name: data.customer_name,
+      receipt_number:receiptNumber,
       receipt_date: data.receipt_date,
       amount: data.amount,
       payment_method: data.payment_method ?? 'cash',
@@ -51,6 +54,24 @@ export const createReceipt = async (data: CreateReceiptInput) => {
     console.error('createReceipt error:', error);
     return { success: false, message: 'Error creating receipt' };
   }
+};
+const getCompanyPrefix = (companyCode: string | null | undefined): string => {
+  if (!companyCode) return DEFAULT_RECEIPT_PREFIX;
+  const normalized = companyCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (normalized.length !== 3) return RECEIPT_NUMBER_MIDDLE;
+  return normalized;
+};
+
+const generateNextReceiptNumber = async (
+  companyCode: string | null | undefined): Promise<string> => {
+  const prefix = getCompanyPrefix(companyCode);
+  const numberPrefix = `${prefix}${RECEIPT_NUMBER_MIDDLE}00`;
+
+  const invoiceCount = await Invoice.unscoped().count({
+    where: { deleted_at: { [Op.is]: null } },
+  });
+
+  return `${numberPrefix}${invoiceCount + 1}`;
 };
 
 export const getReceipts = async (
