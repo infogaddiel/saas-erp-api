@@ -22,6 +22,7 @@ import creditNoteRoutes from './creditNotes/creditNotes';
 import debitNoteRoutes from './debitNotes/debitNotes';
 import questionRoutes from './questions/questions';
 import userFeedbackRoutes from './userFeedback/userFeedback';
+import dashboardRoutes from './dashboard/dashboard';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './swagger/openapi';
@@ -83,6 +84,7 @@ app.use('/api/credit-notes', authenticate, creditNoteRoutes);
 app.use('/api/debit-notes', authenticate, debitNoteRoutes);
 app.use('/api/questions', authenticate, questionRoutes);
 app.use('/api/user-feedback', authenticate, userFeedbackRoutes);
+app.use('/api/dashboard', authenticate, dashboardRoutes);
 app.use('/api/uploads', uploadRoutes);
 
 // Health check endpoint

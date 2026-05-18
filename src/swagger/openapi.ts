@@ -603,6 +603,19 @@ const docsPaths: Record<string, Partial<Record<HttpMethod, Record<string, unknow
       })
     ),
   },
+  '/api/dashboard/general-overview': {
+    get: protectedOperation(
+      operation({
+        summary: 'Get general overview dashboard data',
+        description:
+          'Returns summary cards and chart datasets for tickets, customers, projects, leads, ticket statuses, and customer types.',
+        tags: ['Dashboard'],
+        responses: {
+          200: successResponse('Dashboard overview fetched'),
+        },
+      })
+    ),
+  },
   '/api/users/dropdown': {
     get: protectedOperation(
       operation({
@@ -1898,6 +1911,7 @@ export const openApiSpec = {
     { name: 'Companies' },
     { name: 'Customers' },
     { name: 'Users' },
+    { name: 'Dashboard' },
     { name: 'Items' },
     { name: 'Questions' },
     { name: 'User Feedback' },
