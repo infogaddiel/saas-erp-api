@@ -1,0 +1,314 @@
+import { Item, User } from '../models';
+import { Op } from 'sequelize';
+import ExcelJS from 'exceljs';
+
+interface CreateItemInput {
+  item_code: string;
+  item_name: string;
+  item_image?: string | null;
+  description?: string | null;
+  type: string;
+  category: string;
+  unit_price: number;
+  gst_percentage?: number;
+  unit: string;
+  stock_quantity?: number;
+  notes?: string | null;
+  status?: boolean;
+  created_by?: number | null;
+}
+
+export const createItem = async (data: CreateItemInput) => {
+  try {
+    const item = await Item.create({
+      item_code: data.item_code,
+      item_name: data.item_name,
+      item_image: data.item_image ?? null,
+      description: data.description ?? null,
+      type: data.type,
+      category: data.category,
+      unit_price: data.unit_price,
+      gst_percentage: data.gst_percentage ?? 18.0,
+      unit: data.unit,
+      stock_quantity: data.stock_quantity ?? 0,
+      notes: data.notes ?? null,
+      status: data.status ?? true,
+      created_by: data.created_by ?? null,
+    });
+
+    return { success: true, data: item };
+  } catch (error) {
+    console.error('createItem error:', error);
+    return { success: false, message: 'Error creating item' };
+  }
+};
+
+export const getItems = async (page = 1, limit = 20, name?: string) => {
+  try {
+    const offset = (page - 1) * limit;
+    const where: any = {};
+    if (typeof name !== 'undefined' && name !== '') {
+      where[Op.or] = [
+        { item_name: { [Op.iLike]: `%${name}%` } },
+        { item_code: { [Op.iLike]: `%${name}%` } },
+      ];
+    }
+
+    const { count, rows } = await Item.findAndCountAll({
+      where,
+      distinct: true,
+      offset,
+      limit,
+      order: [['id', 'DESC']],
+      include: [{ model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] }],
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      success: true,
+      data: {
+        items: rows,
+        pagination: {
+          total: count,
+          page,
+          limit,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('getItems error:', error);
+    return { success: false, message: 'Error fetching items' };
+  }
+};
+
+export const getItemById = async (id: number) => {
+  try {
+    const item = await Item.findByPk(id, {
+      include: [{ model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] }],
+    });
+
+    if (!item) return { success: false, message: 'Item not found' };
+
+    return { success: true, data: item };
+  } catch (error) {
+    console.error('getItemById error:', error);
+    return { success: false, message: 'Error fetching item' };
+  }
+};
+
+export const getItemsForDropdown = async (filters?: { searchText?: string; status?: boolean }) => {
+  try {
+    const where: any = {};
+
+    if (filters?.status != null) {
+      where.status = filters.status;
+    }else{
+      where.status = true;
+    }
+
+    const searchText = filters?.searchText?.trim();
+    if (searchText) {
+      where[Op.or] = [
+        { item_name: { [Op.iLike]: `%${searchText}%` } },
+        { item_code: { [Op.iLike]: `%${searchText}%` } },
+        { type: { [Op.iLike]: `%${searchText}%` } },
+        { category: { [Op.iLike]: `%${searchText}%` } },
+      ];
+    }
+
+    const rows = await Item.findAll({
+      attributes: ['id', 'item_name', 'item_code', 'type', 'category', 'unit','unit_price','stock_quantity','gst_percentage', 'status'],
+      where,
+      order: [['item_name', 'ASC']],
+    });
+
+    return { success: true, data: rows };
+  } catch (error) {
+    console.error('getItemsForDropdown error:', error);
+    return { success: false, message: 'Error fetching items for dropdown' };
+  }
+};
+
+export const updateItem = async (id: number, updates: Partial<CreateItemInput>) => {
+  try {
+    const item = await Item.findByPk(id);
+    if (!item) return { success: false, message: 'Item not found' };
+
+    await item.update(updates as any);
+    return { success: true, data: item };
+  } catch (error) {
+    console.error('updateItem error:', error);
+    return { success: false, message: 'Error updating item' };
+  }
+};
+
+export const deleteItem = async (id: number) => {
+  try {
+    const item = await Item.findByPk(id);
+    if (!item) return { success: false, message: 'Item not found' };
+
+    await item.update({ deleted_at: new Date() } as any);
+    return { success: true, message: 'Item deleted' };
+  } catch (error) {
+    console.error('deleteItem error:', error);
+    return { success: false, message: 'Error deleting item' };
+  }
+};
+export const bulkCreateItems = async (dataArray: CreateItemInput[],user_id:number) => {
+  try {
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
+      return { success: false, message: 'Invalid data: Expected non-empty array' };
+    }
+
+    const errors: Array<{ index: number; field: string; message: string }> = [];
+    const seenCodes = new Set<string>();
+
+    dataArray.forEach((data, index) => {
+      const itemCode = String(data.item_code ?? '').trim();
+      const itemName = String(data.item_name ?? '').trim();
+
+      if (!itemCode) errors.push({ index, field: 'item_code', message: 'item_code is required' });
+      if (!itemName) errors.push({ index, field: 'item_name', message: 'item_name is required' });
+      if (data.unit_price == null || Number.isNaN(Number(data.unit_price)) || Number(data.unit_price) <= 0) {
+        errors.push({ index, field: 'unit_price', message: 'unit_price must be greater than 0' });
+      }
+
+      if (itemCode) {
+        const key = itemCode.toLowerCase();
+        if (seenCodes.has(key)) {
+          errors.push({ index, field: 'item_code', message: 'Duplicate item_code in request payload' });
+        } else {
+          seenCodes.add(key);
+        }
+      }
+    });
+
+    const uniqueCodes = dataArray
+      .map((data) => String(data.item_code ?? '').trim())
+      .filter((code) => code !== '');
+    if (uniqueCodes.length > 0) {
+      const existingItems = await Item.findAll({
+        where: { item_code: { [Op.in]: uniqueCodes } },
+        attributes: ['item_code'],
+      });
+
+      for (const existingItem of existingItems as any[]) {
+        const existingCode = String(existingItem.item_code || '');
+        dataArray.forEach((data, index) => {
+          if (String(data.item_code ?? '').trim() === existingCode) {
+            errors.push({ index, field: 'item_code', message: `item_code "${data.item_code}" already exists` });
+          }
+        });
+      }
+    }
+
+    if (errors.length > 0) {
+      return {
+        success: false,
+        message: 'Bulk validation failed',
+        statusCode: 400,
+        data: { errors },
+      };
+    }
+
+    const items = await Item.bulkCreate(
+      dataArray.map((data) => ({
+        item_code: data.item_code,
+        item_name: data.item_name,
+        item_image: data.item_image ?? null,
+        description: data.description ?? null,
+        type: data.type,
+        category: data.category,
+        unit_price: data.unit_price,
+        gst_percentage: data.gst_percentage ?? 18.0,
+        unit: data.unit,
+        stock_quantity: data.stock_quantity ?? 0,
+        notes: data.notes ?? null,
+        status: data.status ?? true,
+        created_by: data.created_by ?? user_id,
+      })),
+      { validate: true }
+    );
+
+    return {
+      success: true,
+      message: `${items.length} items created successfully`,
+      data: { count: items.length, items },
+    };
+  } catch (error) {
+    console.error('bulkCreateItems error:', error);
+    return { success: false, message: 'Error creating items in bulk' };
+  }
+};
+
+export const exportItemsToExcel = async () => {
+  try {
+    const items = await Item.findAll({
+      include: [{ model: User, as: 'createdBy', attributes: ['id', 'name', 'email'] }],
+      order: [['id', 'ASC']],
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Items');
+
+    // Set columns
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 10 },
+      { header: 'Item Code', key: 'item_code', width: 15 },
+      { header: 'Item Name', key: 'item_name', width: 25 },
+      { header: 'Description', key: 'description', width: 30 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Category', key: 'category', width: 15 },
+      { header: 'Unit Price', key: 'unit_price', width: 12 },
+      { header: 'GST %', key: 'gst_percentage', width: 10 },
+      { header: 'Unit', key: 'unit', width: 10 },
+      { header: 'Stock Qty', key: 'stock_quantity', width: 12 },
+      { header: 'Notes', key: 'notes', width: 25 },
+      { header: 'Status', key: 'status', width: 10 },
+      { header: 'Created By', key: 'createdBy', width: 20 },
+      { header: 'Created At', key: 'created_at', width: 18 },
+      { header: 'Updated At', key: 'updated_at', width: 18 },
+    ];
+
+    // Add data
+    items.forEach((item: any) => {
+      worksheet.addRow({
+        id: item.id,
+        item_code: item.item_code,
+        item_name: item.item_name,
+        description: item.description,
+        type: item.type,
+        category: item.category,
+        unit_price: item.unit_price,
+        gst_percentage: item.gst_percentage,
+        unit: item.unit,
+        stock_quantity: item.stock_quantity,
+        notes: item.notes,
+        status: item.status ? 'Active' : 'Inactive',
+        createdBy: item.createdBy?.name || 'N/A',
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      });
+    });
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF70AD47' },
+    };
+
+    return {
+      success: true,
+      data: workbook,
+    };
+  } catch (error) {
+    console.error('exportItemsToExcel error:', error);
+    return { success: false, message: 'Error exporting items', data: null };
+  }
+};
