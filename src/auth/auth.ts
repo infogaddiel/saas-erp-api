@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, verifyOtp, getRoles, changePassword, requestForgotPasswordOtp, resetForgotPassword } from './authController';
+import { login, verifyOtp, getRoles, changePassword, requestForgotPasswordOtp, resetForgotPassword, register } from './authController';
 import validateRequest from '../middlewares/validateRequest';
 import {
   loginSchema,
@@ -7,11 +7,13 @@ import {
   changePasswordSchema,
   forgotPasswordRequestOtpSchema,
   forgotPasswordResetSchema,
+  registerSchema,
 } from './authValidator';
 import authenticate from '../middlewares/authenticate';
 
 const router = Router();
 
+router.post('/register', validateRequest(registerSchema, 'body'), register);
 router.post('/login', validateRequest(loginSchema, 'body'), login);
 router.post('/verify-otp', authenticate, validateRequest(verifyOtpSchema, 'body'),  verifyOtp);
 router.post('/change-password', authenticate, validateRequest(changePasswordSchema, 'body'), changePassword);

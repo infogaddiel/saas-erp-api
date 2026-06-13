@@ -6,8 +6,8 @@ import {
   changePassword as changePasswordService,
   requestForgotPasswordOtp as requestForgotPasswordOtpService,
   resetForgotPassword as resetForgotPasswordService,
+  registerCompanyWithAdmin,
 } from './authService';
-import { any } from 'joi';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -52,8 +52,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 export const getRoles = async (req: Request, res: Response) => {
   try {
-    const roleId = (req as any)?.user?.role_id;
-    const result = await getRolesService(roleId);
+    const userId = (req as any)?.user?.id;
+    const companyId = (req as any)?.user?.company_id;
+    const result = await getRolesService(userId, companyId);
     if (!result.success) return res.status(500).json(result);
     return res.status(200).json(result);
   } catch (error) {
@@ -103,6 +104,23 @@ export const requestForgotPasswordOtp = async (req: Request, res: Response) => {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Request forgot password OTP controller error:', error);
+    return res.status(500).json({ success: false, message: 'An error occurred' });
+  }
+};
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { company_name, company_code, name, mobile, email, password } = req.body;
+    const result = await registerCompanyWithAdmin({ company_name, company_code, name, mobile, email, password });
+
+    if (!result.success) {
+      const conflict = result.message?.includes('already exists');
+      return res.status(conflict ? 409 : 400).json(result);
+    }
+
+    return res.status(201).json(result);
+  } catch (error) {
+    console.error('Register controller error:', error);
     return res.status(500).json({ success: false, message: 'An error occurred' });
   }
 };

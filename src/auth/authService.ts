@@ -3,12 +3,25 @@ import jwt from 'jsonwebtoken';
 import { User, Permission, Menu, Role, Company } from '../models';
 import { sendOtpViaGetRequest } from '../utils/otpGateway';
 import { Op } from 'sequelize';
+import { createCompany } from '../companies/companyService';
+import { createUser } from '../users/userService';
+import { createDefaultRoles } from '../roles/roleService';
 
-export const getRoles = async (roleId: number) => {
+export const getRoles = async (userId: number, companyId: number) => {
   try {
+    const user = await User.findByPk(userId, {
+      include: [{ model: Role, as: 'role', attributes: ['level'] }],
+      attributes: ['id'],
+    });
+    const userLevel: number = (user as any)?.role?.level ?? 0;
+
     const roles = await Role.findAll({
-      where: { is_active: true, id: {[ Op.gt]: roleId }},
-      attributes: ['id', 'type', 'company_id'],
+      where: {
+        is_active: true,
+        company_id: companyId,
+        level: { [Op.gt]: userLevel },
+      },
+      attributes: ['id', 'type', 'level', 'company_id'],
       order: [['level', 'ASC']],
     });
 
@@ -227,6 +240,50 @@ export const requestForgotPasswordOtp = async (mobile: string) => {
   } catch (error) {
     console.error('requestForgotPasswordOtp error:', error);
     return { success: false, message: 'Error sending OTP' };
+  }
+};
+
+export const registerCompanyWithAdmin = async (data: {
+  company_name: string;
+  company_code: string;
+  name: string;
+  mobile: string;
+  email?: string | null;
+  password: string;
+}) => {
+  try {
+    const companyResult = await createCompany({
+      name: data.company_name,
+      company_code: data.company_code.toUpperCase(),
+    });
+
+    if (!companyResult.success) {
+      return companyResult;
+    }
+
+    const company = companyResult.data as any;
+
+    const defaultRoles = await createDefaultRoles(company.id);
+    const superAdminRole = defaultRoles.find((r) => r.level === 1);
+
+    const userResult = await createUser({
+      name: data.name,
+      mobile: data.mobile,
+      email: data.email || null,
+      password: data.password,
+      company_id: company.id,
+      role_id: superAdminRole?.id ?? null,
+    });
+
+    if (!userResult.success) {
+      await company.update({ deleted_at: new Date() });
+      return userResult;
+    }
+
+    return { success: true, message: 'Company registered successfully. You can now log in.' };
+  } catch (error) {
+    console.error('registerCompanyWithAdmin error:', error);
+    return { success: false, message: 'An error occurred during registration' };
   }
 };
 
