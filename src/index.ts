@@ -41,7 +41,9 @@ const corsOptions = {
     'capacitor://localhost', 
     'http://localhost',
     'https://semak-erp.gaddiel.io',
-    'http://semak-erp.gaddiel.io'
+    'http://semak-erp.gaddiel.io',
+    'https://erp.gaddiel.io',
+    'http://erp.gaddiel.io'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
