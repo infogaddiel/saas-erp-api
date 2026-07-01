@@ -13,15 +13,70 @@ interface CreateUserInput {
   menu_ids?: number[];
 }
 
+const fetchUserWithRelations = async (userId: number) => {
+  return User.findByPk(userId, {
+    include: [
+      { model: Company, as: 'company', attributes: ['id', 'name'] },
+      { model: Role, as: 'role', attributes: ['id', 'type'] },
+      {
+        model: Permission,
+        as: 'permissions',
+        attributes: ['id', 'menu_id'],
+        include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
+      },
+    ],
+    attributes: { exclude: ['password'] },
+  });
+};
+
 export const createUser = async (data: CreateUserInput) => {
   try {
-    // Check unique mobile
-    const existingMobile = await User.findOne({ where: { mobile: data.mobile } });
-    if (existingMobile) return { success: false, message: 'Mobile already in use' };
+    // Check for a soft-deleted user with same mobile + company_id — restore instead of creating
+    const deletedUser = await User.unscoped().findOne({
+      where: {
+        mobile: data.mobile,
+        company_id: data.company_id ?? null,
+        deleted_at: { [Op.ne]: null },
+      },
+    });
 
+    if (deletedUser) {
+      const hashed = await hashPassword(data.password);
+      await deletedUser.update({
+        name: data.name,
+        email: data.email ?? null,
+        password: hashed,
+        role_id: data.role_id ?? null,
+        blocked: false,
+        deleted_at: null,
+      } as any);
+
+      // Replace permissions
+      await Permission.update({ deleted_at: new Date() } as any, {
+        where: { user_id: deletedUser.id, deleted_at: null },
+      });
+      if (data.menu_ids && data.menu_ids.length > 0) {
+        await Permission.bulkCreate(
+          data.menu_ids.map((menu_id) => ({ user_id: deletedUser.id, menu_id }))
+        );
+      }
+
+      const restored = await fetchUserWithRelations(deletedUser.id);
+      return { success: true, data: restored };
+    }
+
+    // Check active user with same mobile in the same company
+    const existingMobile = await User.findOne({
+      where: { mobile: data.mobile, company_id: data.company_id ?? null },
+    });
+    if (existingMobile) return { success: false, message: 'Mobile number already in use within this company' };
+
+    // Check email uniqueness (active users only)
     if (data.email) {
-      const existingEmail = await User.findOne({ where: { email: data.email } });
-      if (existingEmail) return { success: false, message: 'Email already in use' };
+      const existingEmail = await User.findOne({
+        where: { email: data.email, company_id: data.company_id ?? null },
+      });
+      if (existingEmail) return { success: false, message: 'Email already in use within this company' };
     }
 
     const hashed = await hashPassword(data.password);
@@ -36,30 +91,13 @@ export const createUser = async (data: CreateUserInput) => {
       blocked: data.blocked ?? false,
     });
 
-    // Add permissions if menu_ids provided
     if (data.menu_ids && Array.isArray(data.menu_ids) && data.menu_ids.length > 0) {
-      const permissions = data.menu_ids.map((menu_id) => ({
-        user_id: user.id,
-        menu_id,
-      }));
-      await Permission.bulkCreate(permissions);
+      await Permission.bulkCreate(
+        data.menu_ids.map((menu_id) => ({ user_id: user.id, menu_id }))
+      );
     }
 
-    // Fetch user with permissions
-    const userWithPermissions = await User.findByPk(user.id, {
-      include: [
-        { model: Company, as: 'company', attributes: ['id', 'name'] },
-        { model: Role, as: 'role', attributes: ['id', 'type'] },
-        {
-          model: Permission,
-          as: 'permissions',
-          attributes: ['id', 'menu_id'],
-          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
-        },
-      ],
-      attributes: { exclude: ['password'] },
-    });
-
+    const userWithPermissions = await fetchUserWithRelations(user.id);
     return { success: true, data: userWithPermissions };
   } catch (error) {
     console.error('createUser error:', error);
@@ -147,15 +185,19 @@ export const updateUser = async (id: number, updates: Partial<CreateUserInput>) 
       updates.password = await hashPassword(updates.password);
     }
 
-    // Prevent updating to an email/mobile that already exists on another user
+    // Prevent updating to a mobile that is already active on another user in the same company
     if (updates.mobile) {
-      const other = await User.findOne({ where: { mobile: updates.mobile } });
-      if (other && other.id !== id) return { success: false, message: 'Mobile already in use' };
+      const other = await User.findOne({
+        where: { mobile: updates.mobile, company_id: user.company_id },
+      });
+      if (other && other.id !== id) return { success: false, message: 'Mobile already in use within this company' };
     }
 
     if (updates.email) {
-      const other = await User.findOne({ where: { email: updates.email } });
-      if (other && other.id !== id) return { success: false, message: 'Email already in use' };
+      const other = await User.findOne({
+        where: { email: updates.email, company_id: user.company_id },
+      });
+      if (other && other.id !== id) return { success: false, message: 'Email already in use within this company' };
     }
 
     // Handle permissions update if menu_ids provided
@@ -178,21 +220,7 @@ export const updateUser = async (id: number, updates: Partial<CreateUserInput>) 
 
     await user.update(userUpdates as any);
 
-    // Fetch updated user with permissions
-    const updatedUser = await User.findByPk(id, {
-      include: [
-        { model: Company, as: 'company', attributes: ['id', 'name'] },
-        { model: Role, as: 'role', attributes: ['id', 'type'] },
-        {
-          model: Permission,
-          as: 'permissions',
-          attributes: ['id', 'menu_id'],
-          include: [{ model: Menu, as: 'menu', attributes: ['id', 'name'] }],
-        },
-      ],
-      attributes: { exclude: ['password'] },
-    });
-
+    const updatedUser = await fetchUserWithRelations(id);
     return { success: true, data: updatedUser };
   } catch (error) {
     console.error('updateUser error:', error);

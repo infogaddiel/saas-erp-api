@@ -40,7 +40,6 @@ User.init(
     mobile: {
       type: DataTypes.STRING(15),
       allowNull: false,
-      unique: 'users_mobile_key',
     },
     password: {
       type: DataTypes.STRING(255),
@@ -90,6 +89,14 @@ User.init(
     sequelize,
     tableName: 'users',
     timestamps: false,
+    indexes: [
+      {
+        unique: true,
+        fields: ['mobile', 'company_id'],
+        where: { deleted_at: null },
+        name: 'users_mobile_company_unique',
+      },
+    ],
     defaultScope: {
       where: {
         deleted_at: null,
